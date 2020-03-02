@@ -1,0 +1,8 @@
+/help
+	Shows this help menu
+/clients
+	shows all clients connected
+/kickall
+	kicks all the clients
+/say <text>
+	sends a chat message to all clients
