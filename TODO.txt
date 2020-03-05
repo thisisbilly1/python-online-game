@@ -1,8 +1,6 @@
-fix player sprite. it's offset or something. the text is correct
-
 inventory
 	-draw boxes etc
-
+terrain loaded from server
 
 guest2891
 zi4DW431

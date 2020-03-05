@@ -164,7 +164,7 @@ class Client(threading.Thread):
         
         #send location to other players
         if login:
-            self.player=player(self.name)
+            self.player=player(self.name,x,y,invresult[2:])
             #send join command to everyone else
             self.clearbuffer()
             self.writebyte(send_codes["join"])

@@ -68,7 +68,7 @@ class world:
         self.running=True
         
         #players
-        self.player=player_self(self, name, self.client.pid, 50, 50)
+        self.player=player_self(self, name, self.client.pid, 0, 0)
         self.client.updatePlayerStart()
          
     def start(self):

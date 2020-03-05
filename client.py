@@ -178,7 +178,8 @@ class Client:
         x = self.readdouble()
         y = self.readdouble()
         #print(str((x,y)))
-        self.world.otherplayers.append(player_other(self.world, name, pid, x, y))
+        p=player_other(self.world, name, pid, x, y)
+        self.world.otherplayers.append(p)
         print(name + " joined")
     def case_message_ping(self):
         #print("pinged")

@@ -26,34 +26,25 @@ class Player(pygame.sprite.Sprite):
         self.pid=pid
         self.namecolor=(0,0,0)
         
-        
-    def update(self):
-        xdir=0
-        ydir=0
-        if self.world.chat.chatting==False:
-            for key in self.world.keyspressed:#pygame.event.get():
-                if key == pygame.K_w:
-                    ydir=-1
-                elif key == pygame.K_s:
-                    ydir=1
-                elif key == pygame.K_a:
-                    xdir=-1
-                elif key == pygame.K_d:
-                    xdir=1   
-            self.move(xdir,ydir)
-            
+
     def getpid(self):
         return self.pid
+    
     def updatePosition(self):
-        #self.rect.move(self.x, self.y)
-        self.rect.move_ip(self.x-self.x_previous,self.y-self.y_previous)
+        self.image=pygame.Surface((self.width,self.height))
+        self.image.fill((255,0,0))
+        self.rect = self.image.get_rect().move(self.x,self.y)
+        
+        #self.rect=self.rect.move(self.x, self.y)
+        
+        #self.rect.move_ip(self.x-self.x_previous,self.y-self.y_previous)
 
     def draw(self):
         #print(str(self.x)+","+str(self.y))
         #self.rect.move(self.x, self.y)
         self.updatePosition()
-
         self.world.screen.blit(self.image, self.rect)
+        
         fontobject = pygame.font.Font(None,18)
         self.world.screen.blit(fontobject.render(self.name, 1, (0,0,0)),(self.x,self.y-self.height)) 
         
@@ -61,6 +52,7 @@ class Player(pygame.sprite.Sprite):
         self.y_previous=self.y
         #pygame.draw.rect(self.world.screen, (0, 0, 128), self.rect) # draw the rect at a variable location
         
+
         
     def stop(self):
         self.running=False
