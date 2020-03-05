@@ -6,3 +6,5 @@
 	kicks all the clients
 /say <text>
 	sends a chat message to all clients
+/save
+	saves player to database

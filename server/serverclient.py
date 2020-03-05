@@ -37,30 +37,19 @@ class Client(threading.Thread):
         
     def sendmessage_all(self,sendToSelf=True):
         for c in self.server.clients:
-            if not sendToSelf:
-                if c == self:
-                    continue
-            c.sendmessage(self.buffer)
+            if not c.player==None:
+                if sendToSelf:
+                    c.sendmessage(self.buffer)
+                else:
+                    if not c == self:
+                        c.sendmessage(self.buffer)  
     def sendmessage_other(self,pid):
         for c in self.server.clients:
-            if pid==c.getpid():
-                c.sendmessage(self.buffer)   
-            
+            if not c.player==None:
+                if pid==c.pid:
+                    c.sendmessage(self.buffer)   
+                
     def run(self):
-        self.clearbuffer()
-        self.writebyte(send_codes["self_join"])
-        self.writebyte(self.pid)
-        self.sendmessage()
-        #get the other players
-        for players in self.server.clients:
-            if (not players.getpid() == self.pid) and (not players.getpid()==-1):
-                players.clearbuffer()
-                players.writebyte(send_codes["join"])
-                players.writestring(players.name)
-                players.writebyte(players.getpid())
-                players.sendmessage_other(self.pid)
-        #start the player obj
-        self.player=player(self.name)
         #print(self.pid)
         while self.connected:
             try:
@@ -98,6 +87,104 @@ class Client(threading.Thread):
             self.case_message_chat()
         if event_id == receive_codes["move"]:
             self.case_message_move()
+        if event_id == receive_codes["login"]:
+            self.case_message_login()
+        if event_id == receive_codes["register"]:
+            self.case_message_register()
+    
+    def case_message_register(self):
+        username=self.readstring()
+        password=self.readstring()
+        result = self.server.sql("SELECT * FROM Players WHERE username=?",(username,))
+        st=""
+        success=True
+        if result == None:
+            self.server.sql("INSERT INTO Players(Username, Password) VALUES(?,?)",(username,password))
+            
+            result = self.server.sql("SELECT * FROM Players WHERE username=?",(username,))
+            print(result)
+            self.server.sql("INSERT INTO Inventory(PlayerID) VALUES(?)",(result[0]))
+            
+            st="Succesfully registered account!"
+            success=True
+            print(username+" registered")
+        else:
+            st="Name already taken."
+            success=False
+        self.clearbuffer()
+        self.writebyte(send_codes["register"])
+        self.writestring(st)
+        self.writebit(success)
+        self.sendmessage()
+    def case_message_login(self):
+        username=self.readstring()
+        password=self.readstring()
+        login=True
+        login_msg=""
+        #check username+pass 
+        result = self.server.sql("SELECT * FROM Players WHERE username=?",(username,))
+        invresult = self.server.sql("SELECT * FROM Inventory WHERE PlayerID=?",(result[0],))
+        print(result)
+        print(invresult)
+        if result == None:
+            login=False
+            login_msg="Invalid username or password"
+        if login:
+            pwd=result[2]#password
+            if not password==pwd:
+                login=False
+                login_msg="Invalid username or password"
+        #check if they are already logged in
+        for c in self.server.clients:
+            if c.name==username:
+                login=False
+                login_msg="you are already logged in"
+        
+        x=0
+        y=0
+        #log in or send message to client
+        self.clearbuffer()
+        self.writebyte(send_codes["login"])
+        self.writebit(login)
+        if login:
+            x=result[3]#x
+            y=result[4]#y
+
+            self.writebyte(self.pid)
+            self.writedouble(x)
+            self.writedouble(y)
+            self.writebyte(len(invresult)-2)#number of inv slots
+            for i in range(2,len(invresult)):#write all of them
+                self.writestring(str(invresult[i]))
+            print(username+" logged in")
+            self.name=username
+        else:
+            self.writestring(login_msg)
+        self.sendmessage()
+        
+        #send location to other players
+        if login:
+            self.player=player(self.name)
+            #send join command to everyone else
+            self.clearbuffer()
+            self.writebyte(send_codes["join"])
+            self.writestring(self.name)
+            self.writebyte(self.pid)
+            self.writedouble(x)
+            self.writedouble(y)
+            self.sendmessage_all(False)
+            
+            #get the other players
+            for players in self.server.clients:
+                if (not players.getpid() == self.pid) and (not players.player==None):
+                    self.clearbuffer()
+                    self.writebyte(send_codes["join"])
+                    self.writestring(players.name)
+                    self.writebyte(players.getpid())
+                    self.writedouble(players.player.x)
+                    self.writedouble(players.player.y)
+                    self.sendmessage()
+                    
     def case_message_move(self):
         x=self.readdouble()
         y=self.readdouble()
@@ -119,16 +206,6 @@ class Client(threading.Thread):
         self.writestring(text)
         self.sendmessage_all()
     
-    def case_message_join(self):
-        #self.disconnect_user()
-        self.name=self.readstring()
-        print(self.name+ " joined")
-        self.clearbuffer()
-        self.writebyte(send_codes["join"])
-        self.writestring(self.name)
-        self.writebyte(self.pid)
-        self.sendmessage_all(False)
-        
     def case_message_ping(self):
         self.clearbuffer()
         self.writebyte(send_codes["ping"])
@@ -143,6 +220,13 @@ class Client(threading.Thread):
     def disconnect_user(self):
         #print("Disconnected from ", self.address)
         print(self.name+ " disconnected")
+        
+        #save into db
+        if self.player!=None:
+            self.server.sql("UPDATE Players SET x=?, y=? WHERE username=?", 
+                            (self.player.x, self.player.y, self.name))
+            self.server.sql("COMMIT")
+        
         self.clearbuffer()
         self.writebyte(send_codes["leave"])
         self.writestring(self.name)

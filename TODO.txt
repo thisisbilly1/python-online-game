@@ -1,7 +1,8 @@
-convert the drawing to pygame
-
-
-register
-log in
+fix player sprite. it's offset or something. the text is correct
 
 inventory
+	-draw boxes etc
+
+
+guest2891
+zi4DW431

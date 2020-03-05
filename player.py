@@ -1,36 +1,67 @@
 import time
 from threading import Thread
-import cv2
+import pygame
 
-class Player:
-    def __init__(self, name, pid):
-        self.name=name
-        self.running=True
+class Player(pygame.sprite.Sprite):
+    def __init__(self, world, name, pid, x, y):
+        super().__init__()
+        self.world=world
         self.width=16
         self.height=16
-        self.x=0
-        self.y=0
-        self.pid=pid
+        
+        self.image=pygame.Surface((self.width,self.height))
+        self.image.fill((255,0,0))
+        self.rect = self.image.get_rect()
+        
+        #self.rect = pygame.draw.rect(self.world.screen, (0, 0, 128), (64, 54, 16, 16))
+        
+        self.name=name
+        self.running=True
 
-    def start(self):
-        #self.update()
-        Thread(target=self.update,args=()).start()
-        return self
+        self.x=x
+        self.y=y
+        self.x_previous=0
+        self.y_previous=0
+        
+        self.pid=pid
+        self.namecolor=(0,0,0)
+        
         
     def update(self):
-        while self.running:
-            time.sleep(1)
+        xdir=0
+        ydir=0
+        if self.world.chat.chatting==False:
+            for key in self.world.keyspressed:#pygame.event.get():
+                if key == pygame.K_w:
+                    ydir=-1
+                elif key == pygame.K_s:
+                    ydir=1
+                elif key == pygame.K_a:
+                    xdir=-1
+                elif key == pygame.K_d:
+                    xdir=1   
+            self.move(xdir,ydir)
             
     def getpid(self):
         return self.pid
-    
-    def draw(self,scene):
-        font=cv2.FONT_HERSHEY_SIMPLEX
-        scene = cv2.rectangle(scene, (int(self.x-self.width/2),int(self.y-self.height/2)),
-                             (int(self.x+self.width/2),int(self.y+self.height/2)),
-                             (0,0,0),cv2.FILLED)
-        scene = cv2.putText(scene, str(self.name),(int(self.x),int(self.y-self.width)),font, .5, (255,0,255), 1, cv2.LINE_AA)
-        return scene
+    def updatePosition(self):
+        #self.rect.move(self.x, self.y)
+        self.rect.move_ip(self.x-self.x_previous,self.y-self.y_previous)
+
+    def draw(self):
+        #print(str(self.x)+","+str(self.y))
+        #self.rect.move(self.x, self.y)
+        self.updatePosition()
+
+        self.world.screen.blit(self.image, self.rect)
+        fontobject = pygame.font.Font(None,18)
+        self.world.screen.blit(fontobject.render(self.name, 1, (0,0,0)),(self.x,self.y-self.height)) 
+        
+        self.x_previous=self.x
+        self.y_previous=self.y
+        #pygame.draw.rect(self.world.screen, (0, 0, 128), self.rect) # draw the rect at a variable location
+        
+        
     def stop(self):
         self.running=False
 #name=input("name: ")

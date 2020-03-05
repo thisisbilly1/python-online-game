@@ -8,7 +8,15 @@ import time
 sys.path.insert(1, 'D:/work/network base/network')
 from NetworkConstants import receive_codes, send_codes
 
-
+sys.path.insert(1, 'D:/work/python online game/server/sqlite')
+import sqlite3
+'''
+def dict_factory(cursor, row):
+	d = {}
+	for idx, col in enumerate(cursor.description):
+		d[col[0]] = row[idx]
+	return d
+'''
 class Server:
     def __init__(self, max_clients, ip, port):
         
@@ -19,13 +27,39 @@ class Server:
         self.socket = None
         self.running = False
         
+        self.db = sqlite3.connect('./sqlite/playerdata.db',check_same_thread=False)
+        self.dbc= self.db.cursor()
+        #self.db.row_factory = dict_factory
+        
+        with open('help.txt', 'r') as myfile:
+            self.input_help=myfile.read()
+    def __del__(self):
+        self.db.commit()
+        self.db.close()
+    def sql(self,sql,args=()):
+        try:
+            if sql=="COMMIT":
+                self.db.commit()
+            else:
+                res = self.dbc.execute(sql,args)
+                if "SELECT" in sql:
+                    result=res.fetchall()
+                    if len(result)==1:
+                        return result[0]
+                    elif len(result)==0:
+                        return None
+                    else:
+                        return result
+                    
+                elif "INSERT INTO" in sql:
+                    self.db.commit()
+        except Exception as e:
+            print(e)
     def inputs(self):
         while self.running:
             x=input("Server>")
-            
             if "/help" in x:
-                print("help coming soon LOL")
-            
+                print(self.input_help)
             if "/say" in x:
                 text=x.replace("/say ", "")
                 for players in self.clients:
@@ -40,6 +74,9 @@ class Server:
             if "/clients" in x:
                 for players in self.clients:
                     print(str(players.pid)+". "+str(players.name) + ": " + str(players.address))
+            if "/save" in x:
+                self.db.commit()
+                print("committed to database")
     def start(self):
         #create new socket
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
