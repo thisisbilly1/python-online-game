@@ -6,18 +6,35 @@ from player_other import player_other
 from client import Client
 from loginscreen import LoginScreen
 import sys
-from interface import Inventory, Chat
+from interface import Inventory, Chat, rightClick
 sys.path.insert(1, 'D:/work/python online game/network')
 from NetworkConstants import login_status
+sys.path.insert(1, 'D:/work/python online game/game')
+from items import groundItem
+
+
 
 class world:
     def __init__(self):
         self.otherplayers=[]
+        self.grounditems=[]
         self.inventory=Inventory(self)
         self.chat=Chat(self)
-        #keyboard inputs
+        self.rightclick=rightClick(self)
+        
+        #inputs
         self.keyspressed=[] #for key HOLD DOWN
         self.keyspress=[] #for key DOWN 
+        self.mouse_x=0
+        self.mouse_y=0
+        self.mouse_left=False
+        self.mouse_left_up=False
+        self.mouse_left_down=False
+        self.mouse_right=False
+        self.mouse_right_up=False
+        self.mouse_right_down=False
+        self.mouse_left_previous=False
+        self.mouse_right_previous=False
         
         #network
         self.client=Client("127.0.0.1",1337, self).start()
@@ -60,11 +77,13 @@ class world:
             
         #scene
         pygame.init()
+        pygame.font.init()
+        self.fontobject = pygame.font.Font(None,18)
         self.size=(300,300)
         #self.scene=np.ones((self.size[0],self.size[1],3),np.uint8)*255
-        self.screen = pygame.display.set_mode((720, 480))
+        self.screen = pygame.display.set_mode(self.size)
         self.clock=pygame.time.Clock()
-        self.FPS=60
+        self.FPS=200#60
         self.running=True
         
         #players
@@ -79,13 +98,38 @@ class world:
     def update(self):
         while self.running:
             self.draw()
+            
+            #reset the mouse vars
+            self.mouse_left_up=False
+            self.mouse_left_down=False
+            self.mouse_right_up=False
+            self.mouse_right_down=False
 
+            self.mouse_left_previous=self.mouse_left
+            self.mouse_right_previous=self.mouse_right
+            #mouse inputs
+            mouse = pygame.mouse.get_pos() 
+            self.mouse_x=mouse[0]
+            self.mouse_y=mouse[1]
+            clicks = pygame.mouse.get_pressed()
+            self.mouse_left=clicks[0]
+            self.mouse_right=clicks[2]
+            
+            if self.mouse_left and self.mouse_left_previous==False:
+                self.mouse_left_down=True
+            if self.mouse_right and self.mouse_right_previous==False:
+                self.mouse_right_down=True
+            if self.mouse_left==False and self.mouse_left_previous:
+                self.mouse_left_up=True
+            if self.mouse_right==False and self.mouse_right_previous:
+                self.mouse_right_up=True
+            
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.stop()
                     return
+                #keyboard
                 elif event.type == pygame.KEYDOWN:
-                    #print("a")
                     if event.key == pygame.K_ESCAPE:
                         self.stop()
                         return
@@ -95,6 +139,7 @@ class world:
                 elif event.type == pygame.KEYUP:
                     if event.key in self.keyspressed:
                         self.keyspressed.remove(event.key)
+
                         
             self.player.update()
             self.chat.update()
@@ -102,6 +147,8 @@ class world:
     
             self.keyspress=[]#reset the tapped keys
             
+            
+           
     def draw(self):
         self.screen.fill((255,255,255))
         
@@ -109,11 +156,16 @@ class world:
         for c in self.otherplayers:
             c.draw()
         
+        for i in self.grounditems:
+            i.draw()
+         
+        
         self.inventory.draw()
         self.chat.draw()
+        self.rightclick.draw()
         
         pygame.display.update()
-        
+        self.clock.tick(self.FPS)
         
     def stop(self):
         self.running=False
@@ -128,6 +180,13 @@ class world:
             if c.getpid()==pid:
                 return c
         print("cant find player with pid "+str(pid))
+        return None
+    
+    def findItem(self, iid):
+        for i in self.grounditems:
+            if i.getiid()==iid:
+                return i
+        print("cant find item with iid "+str(iid))
         return None
 
 world().start()

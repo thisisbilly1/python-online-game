@@ -4,10 +4,11 @@ import struct
 import sys
 import threading
 from player import player
+from item import Serveritem
 
 sys.path.insert(1, 'D:/work/python online game/network')
 import Network
-from NetworkConstants import receive_codes, send_codes
+from NetworkConstants import receive_codes, send_codes, inventory_codes
 
 class Client(threading.Thread):
     def __init__(self, connection, address, server, pid):
@@ -19,7 +20,7 @@ class Client(threading.Thread):
         self.connected = True
         
         self.pid=pid
-        self.id = -1
+        self.id = -1 #used for database
         
         self.buffer = Network.Buff()
         self.player = None
@@ -91,7 +92,78 @@ class Client(threading.Thread):
             self.case_message_login()
         if event_id == receive_codes["register"]:
             self.case_message_register()
-    
+        if event_id == receive_codes["inventory"]:
+            #request to update inventory
+            self.case_message_inventory()
+
+        
+    def case_message_inventory(self):
+        #print("1")
+        t=self.readbyte()
+        if t==inventory_codes["swap"]:#swapping items
+            clickID=self.readbyte()
+            hoverID=self.readbyte()
+            self.player.inventory[clickID], self.player.inventory[hoverID] = self.player.inventory[hoverID], self.player.inventory[clickID]
+        elif t==inventory_codes["drop"]:#drop item
+            clickID=self.readbyte()
+            i=Serveritem(self.server,len(self.server.items)+1,self.player.inventory[clickID],self.player.x,self.player.y)
+            self.server.items.append(i)
+            self.player.inventory[clickID]=None
+        elif t==inventory_codes["pickup"]:
+            #add check for player distance to item
+            iid=self.readdouble()
+            itm=None
+            for i in self.server.items:
+                    if i.iid==iid:
+                       itm=i 
+            if not itm==None:
+                emptyinvslot=-1
+                #check for stackable
+                for i in range(len(self.player.inventory)): 
+                    if not self.player.inventory[i]==None:
+                        if (self.player.inventory[i][0]==itm.name and itm.stackable==True):
+                            newValue=int(self.player.inventory[i][1])+int(itm.quantity)
+                            self.player.inventory[i][1]=newValue
+                            emptyinvslot=i
+                            #print("stacked")
+                            break
+                #check for open spot if not stackable
+                if emptyinvslot==-1:
+                    for i in range(len(self.player.inventory)):
+                        if self.player.inventory[i]==None:
+                            self.player.inventory[i]=itm.data#str(itm.name)+":"+str(itm.quantity)
+                            emptyinvslot=i
+                            #print("new item")
+                            break
+                    
+                if not emptyinvslot==-1:
+                    itm.delete()
+                    if self in self.server.clients:
+                        self.server.items.remove(itm)
+                else:
+                    self.clearbuffer()
+                    self.writebyte(send_codes["chat"])
+                    self.writestring("Inventory full")
+                    self.sendmessage()
+            else:
+                print("no item found...")
+                       
+                            
+        self.send_inventory()
+    def send_inventory(self):
+        #print(self.player.inventory)
+        self.clearbuffer()
+        self.writebyte(send_codes["inventory"])
+        self.writebyte(len(self.player.inventory))#number of inv slots
+        for i in self.player.inventory:#write all of them
+            #print(i)
+            if not str(i)=="None":
+                self.writestring(str(i[0]))
+                self.writedouble(float(i[1]))
+            else:
+                self.writestring(str(i))
+        self.sendmessage()
+        
     def case_message_register(self):
         username=self.readstring()
         password=self.readstring()
@@ -123,9 +195,10 @@ class Client(threading.Thread):
         login_msg=""
         #check username+pass 
         result = self.server.sql("SELECT * FROM Players WHERE username=?",(username,))
-        invresult = self.server.sql("SELECT * FROM Inventory WHERE PlayerID=?",(result[0],))
-        print(result)
-        print(invresult)
+        self.id=result[0]
+        invresult = self.server.sql("SELECT * FROM Inventory WHERE PlayerID=?",(self.id,))
+        #print(result)
+        #print(invresult)
         if result == None:
             login=False
             login_msg="Invalid username or password"
@@ -153,9 +226,6 @@ class Client(threading.Thread):
             self.writebyte(self.pid)
             self.writedouble(x)
             self.writedouble(y)
-            self.writebyte(len(invresult)-2)#number of inv slots
-            for i in range(2,len(invresult)):#write all of them
-                self.writestring(str(invresult[i]))
             print(username+" logged in")
             self.name=username
         else:
@@ -164,7 +234,10 @@ class Client(threading.Thread):
         
         #send location to other players
         if login:
+            #create player and send inventory
             self.player=player(self.name,x,y,invresult[2:])
+            self.send_inventory()
+            
             #send join command to everyone else
             self.clearbuffer()
             self.writebyte(send_codes["join"])
@@ -184,6 +257,9 @@ class Client(threading.Thread):
                     self.writedouble(players.player.x)
                     self.writedouble(players.player.y)
                     self.sendmessage()
+            #get all the items
+            for i in self.server.items:
+                i.create(self)
                     
     def case_message_move(self):
         x=self.readdouble()
@@ -225,6 +301,27 @@ class Client(threading.Thread):
         if self.player!=None:
             self.server.sql("UPDATE Players SET x=?, y=? WHERE username=?", 
                             (self.player.x, self.player.y, self.name))
+            
+            #save the player's inventory
+            invsqlcommand="UPDATE Inventory SET "
+            for i in range(len(self.player.inventory)):
+                if not i == len(self.player.inventory)-1:
+                    invsqlcommand+="item"+str(i)+"=?, "
+                else:
+                    invsqlcommand+="item"+str(i)+"=? "
+            invsqlcommand+="WHERE PlayerID=?"
+            #print(invsqlcommand)
+            sqlvalues=[]
+            for a in self.player.inventory:
+                if not a==None:
+                    sqlvalues.append(a[0]+":"+str(a[1])) 
+                else:
+                    sqlvalues.append(a) 
+            #sqlvalues=[a[0]+":"+str(a[1]) for a in self.player.inventory]#self.player.inventory
+            sqlvalues.append(self.id)
+            self.server.sql(invsqlcommand,tuple(sqlvalues))#(self.id,)
+            
+            #commit to database
             self.server.sql("COMMIT")
         
         self.clearbuffer()

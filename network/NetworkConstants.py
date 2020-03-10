@@ -6,6 +6,9 @@ receive_codes = {
     "register": 4,
     "login": 5,
     "move": 6,
+    "inventory": 7,
+    "item_drop":8,
+    "item_pickup":9
     }
 send_codes = {
     "ping": 0,
@@ -15,10 +18,18 @@ send_codes = {
     "register": 4,
     "login": 5,
     "move": 6,
+    "inventory": 7,
+    "item_drop":8,
+    "item_pickup":9
     }
 
 login_status={
     "wait":0,
     "fail":1,
     "success":2
+    }
+inventory_codes = {
+    "swap":0,
+    "drop":1,
+    "pickup":2
     }

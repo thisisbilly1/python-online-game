@@ -1,5 +1,15 @@
 inventory
-	-draw boxes etc
+
+	-noted items prob
+	-use items on stuff?
+
+
+-stackable
+-notes
+-dropped items on the server and client have objs
+
+	-items
+	-sprites for items
 terrain loaded from server
 
 guest2891

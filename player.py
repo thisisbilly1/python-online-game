@@ -26,14 +26,15 @@ class Player(pygame.sprite.Sprite):
         self.pid=pid
         self.namecolor=(0,0,0)
         
+        #self.fontobject = pygame.font.Font(None,18)
 
     def getpid(self):
         return self.pid
     
     def updatePosition(self):
-        self.image=pygame.Surface((self.width,self.height))
-        self.image.fill((255,0,0))
-        self.rect = self.image.get_rect().move(self.x,self.y)
+        #self.image=pygame.Surface((self.width,self.height))
+        #self.image.fill((255,0,0))
+        self.rect = self.image.get_rect().move(int(self.x),int(self.y))
         
         #self.rect=self.rect.move(self.x, self.y)
         
@@ -45,8 +46,8 @@ class Player(pygame.sprite.Sprite):
         self.updatePosition()
         self.world.screen.blit(self.image, self.rect)
         
-        fontobject = pygame.font.Font(None,18)
-        self.world.screen.blit(fontobject.render(self.name, 1, (0,0,0)),(self.x,self.y-self.height)) 
+
+        self.world.screen.blit(self.world.fontobject.render(self.name, 1, (0,0,0)),(self.x,self.y-self.height)) 
         
         self.x_previous=self.x
         self.y_previous=self.y

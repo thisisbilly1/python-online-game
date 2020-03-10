@@ -21,7 +21,8 @@ class Server:
     def __init__(self, max_clients, ip, port):
         
         self.max_clients = max_clients
-        self.clients = []
+        self.clients = []#players
+        self.items = []#items on the ground
         self.port = port
         self.ip = ip
         self.socket = None

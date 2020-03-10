@@ -10,6 +10,8 @@ sys.path.insert(1, 'D:/work/python online game/network')
 import Network
 from NetworkConstants import receive_codes, send_codes, login_status
 
+sys.path.insert(1, 'D:/work/python online game/game')
+from items import groundItem
 
 class Client:
     def __init__(self, ip, port, world):
@@ -111,20 +113,51 @@ class Client:
         
     def handlepacket(self):
         event_id=self.readbyte()
-        if event_id == receive_codes["login"]:
+        if event_id == receive_codes["login"]:#login
             self.case_message_login()
-        if event_id == receive_codes["register"]:
+        if event_id == receive_codes["register"]:#register
             self.case_message_register()
-        if event_id == receive_codes["ping"]:
+        if event_id == receive_codes["ping"]:#ping from server
             self.case_message_ping()
-        if event_id == receive_codes["chat"]:
+        if event_id == receive_codes["chat"]:#chatting
             self.case_message_chat()
-        if event_id == receive_codes["join"]:
+        if event_id == receive_codes["join"]:#other player joins
             self.case_message_join()
-        if event_id == receive_codes["leave"]:
+        if event_id == receive_codes["leave"]:#other player leaves
             self.case_message_leave()
-        if event_id == receive_codes["move"]:
+        if event_id == receive_codes["move"]:#other player moves
             self.case_message_move()
+        if event_id == receive_codes["inventory"]:#self inventory is updated
+            self.case_message_inventory()
+        if event_id == receive_codes["item_drop"]:#dropped item
+            self.case_message_item_drop()
+        if event_id == receive_codes["item_pickup"]:#dropped item
+            self.case_message_item_pickup()
+    def case_message_item_pickup(self):
+        iid=self.readdouble()
+        for i in self.world.grounditems:
+            if i.iid==iid:
+                self.world.grounditems.remove(i)
+    def case_message_item_drop(self):
+        iid=self.readdouble()
+        name=self.readstring()
+        x=self.readdouble()
+        y=self.readdouble()
+        quantity=self.readdouble()
+        item=groundItem(self.world,iid,name,x,y,quantity)
+        self.world.grounditems.append(item)
+    def case_message_inventory(self):
+        #inventory
+        invslots=self.readbyte()
+        self.world.inventory.inventory=[]
+        for i in range(invslots):
+            item=self.readstring()
+            if item=="None":
+                self.world.inventory.inventory.append(None)
+            else:
+                quantity=self.readdouble()
+                self.world.inventory.inventory.append([item,quantity])
+        #print(self.world.inventory.inventory)
     def case_message_move(self):
         pid=self.readbyte()
         c=self.world.findPlayer(pid)
@@ -150,11 +183,6 @@ class Client:
             self.pid = self.readbyte()
             self.playerstartx=self.readdouble()
             self.playerstarty=self.readdouble()
-            #inventory
-            invslots=self.readbyte()
-            for i in range(invslots):
-                self.world.inventory.inventory.append(eval(self.readstring()))
-            print(self.world.inventory.inventory)
             print("sucessfully logged in")
             self.loginStatus=login_status["success"]
         else:
@@ -204,7 +232,13 @@ class Client:
         self.socket.close()
     def updatePlayerStart(self):
         self.world.player.startPosition((self.playerstartx,self.playerstarty))
-        
+    def updateInventory(self,t,sendList):
+        self.clearbuffer()
+        self.writebyte(send_codes["inventory"])
+        self.writebyte(t)
+        for i in sendList:
+            self.writebyte(i)
+        self.sendmessage()
         
     def clearbuffer(self):
         self.buffer.clearbuffer()
