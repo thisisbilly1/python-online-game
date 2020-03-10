@@ -235,7 +235,7 @@ class Client(threading.Thread):
         #send location to other players
         if login:
             #create player and send inventory
-            self.player=player(self.name,x,y,invresult[2:])
+            self.player=player(self.name,x,y,invresult[2:]).start()
             self.send_inventory()
             
             #send join command to everyone else
@@ -262,15 +262,21 @@ class Client(threading.Thread):
                 i.create(self)
                     
     def case_message_move(self):
-        x=self.readdouble()
-        y=self.readdouble()
-        self.player.move((x,y))
-        
+        self.player.inputs=[self.readbit(),self.readbit(),self.readbit(),self.readbit()]
+		
+        self.player.x=self.readdouble()
+        self.player.y=self.readdouble()
+
         self.clearbuffer()
         self.writebyte(send_codes["move"])
         self.writebyte(self.pid)
-        self.writedouble(x)
-        self.writedouble(y)
+        self.writebit(self.player.inputs[0])
+        self.writebit(self.player.inputs[1])
+        self.writebit(self.player.inputs[2])
+        self.writebit(self.player.inputs[3])
+        self.writedouble(self.player.x)
+        self.writedouble(self.player.y)
+        
         self.sendmessage_all(False)
         
     def case_message_chat(self):
@@ -330,6 +336,7 @@ class Client(threading.Thread):
         self.writebyte(self.pid)
         self.sendmessage_all(False)
         self.connected = False
+        self.player.running=False
         if self in self.server.clients:
             self.server.clients.remove(self)
         

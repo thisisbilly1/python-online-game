@@ -1,34 +1,55 @@
 from player import Player
 import pygame
-
+from threading import Thread
+import time
+import sys
+sys.path.insert(1, 'D:/work/python online game/network')
+from NetworkConstants import send_codes
 class player_self(Player):
     def __init__(self, world, name, pid,  x, y):
         super().__init__(world, name, pid, x, y)
         self.world=world
         self.client=self.world.client
         self.namecolor=(255,0,255)
+        self.prev_inputs=self.inputs
+        
+    def start(self):
+        Thread(target=self.update,args=()).start()
+        return self
     def update(self):
-        xdir=0
-        ydir=0
-        if self.world.chat.chatting==False:
-            for key in self.world.keyspressed:#pygame.event.get():
-                if key == pygame.K_w:
-                    ydir=-1
-                elif key == pygame.K_s:
-                    ydir=1
-                elif key == pygame.K_a:
-                    xdir=-1
-                elif key == pygame.K_d:
-                    xdir=1   
-            self.move(xdir,ydir)   
-    def move(self, xdir, ydir):
-        if not (ydir==0 and xdir==0):
-            if (0<self.x+xdir<self.world.screen.get_width()-self.width
-            and 0<self.y+ydir<self.world.screen.get_height()-self.height):
-                self.x+=xdir
-                self.y+=ydir
-                #send packet
-                self.client.sendmove(self.x,self.y)
+        start_time=time.time()
+        while self.running:
+            self.prev_inputs=self.inputs
+            self.inputs=[0,0,0,0]
+            if self.world.chat.chatting==False:
+                for key in self.world.keyspressed:#pygame.event.get():
+                    if key == pygame.K_w:
+                        self.inputs[2]=1
+                    elif key == pygame.K_s:
+                        self.inputs[3]=1
+                    elif key == pygame.K_a:
+                        self.inputs[0]=1
+                    elif key == pygame.K_d:
+                        self.inputs[1]=1 
+                
+                
+            #send packet if inputs updated
+            if not self.inputs==self.prev_inputs:
+                #print("send move")
+                self.world.client.clearbuffer()
+                self.world.client.writebyte(send_codes["move"])
+                self.world.client.writebit(self.inputs[0])
+                self.world.client.writebit(self.inputs[1])
+                self.world.client.writebit(self.inputs[2])
+                self.world.client.writebit(self.inputs[3])
+                self.world.client.writedouble(self.x)
+                self.world.client.writedouble(self.y)
+                self.world.client.sendmessage()
+            self.move()
+            #cap fps
+            time.sleep(1.0/self.world.FPS - ((time.time() - start_time) % (1.0/self.world.FPS)))
+    
+           
     
     def startPosition(self,position):
         self.x=position[0]

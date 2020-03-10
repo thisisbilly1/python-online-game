@@ -1,15 +1,24 @@
-inventory
+add platforming
+load terrain from server
 
-	-noted items prob
+4. define my MMO goals
+	-NPCS
+	-combat
+		-classes
+		-Power points
+		-abilities
+		-auto attacks
+	-equiptment
+
+	-quests
+	
+
+inventory
+	-sprites for items
+	-noted items
 	-use items on stuff?
 
-
--stackable
--notes
--dropped items on the server and client have objs
-
-	-items
-	-sprites for items
+	
 terrain loaded from server
 
 guest2891

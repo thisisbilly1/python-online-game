@@ -92,7 +92,7 @@ class groundItem:
         self.height=8
         self.box=[self.x,self.y,self.width,self.height]
         self.image=pygame.Surface((self.width,self.height))
-        self.image.fill((0,255,0))
+        self.image.fill((0,0,255))
         self.rect = self.image.get_rect()
         self.rect = self.image.get_rect().move(self.x,self.y)
         self.options={
@@ -121,7 +121,7 @@ class groundItem:
         
         self.world.screen.blit(self.image, self.rect)
         
-        self.world.screen.blit(self.world.fontobject.render(str(self.name)+": "+str(self.iid), 1, (0,0,0)),(self.x,self.y-self.height)) 
+        self.world.screen.blit(self.world.fontobject.render(str(self.name), 1, (0,0,0)),(self.x,self.y-self.height)) 
         if self.quantity>1:
             q,color=displayStack(self.quantity)
             self.world.screen.blit(self.world.fontobject.render(q, 1, color),(self.x,self.y)) 

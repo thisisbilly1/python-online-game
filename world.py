@@ -11,11 +11,13 @@ sys.path.insert(1, 'D:/work/python online game/network')
 from NetworkConstants import login_status
 sys.path.insert(1, 'D:/work/python online game/game')
 from items import groundItem
+from Wall import Wall
 
 
 
 class world:
     def __init__(self):
+        self.objects=[Wall(self,0,200,350,16)]
         self.otherplayers=[]
         self.grounditems=[]
         self.inventory=Inventory(self)
@@ -87,7 +89,7 @@ class world:
         self.running=True
         
         #players
-        self.player=player_self(self, name, self.client.pid, 0, 0)
+        self.player=player_self(self, name, self.client.pid, 0, 0).start()
         self.client.updatePlayerStart()
          
     def start(self):
@@ -141,7 +143,7 @@ class world:
                         self.keyspressed.remove(event.key)
 
                         
-            self.player.update()
+            #self.player.update()
             self.chat.update()
             self.inventory.update()
     
@@ -158,6 +160,8 @@ class world:
         
         for i in self.grounditems:
             i.draw()
+        for o in self.objects:
+            o.draw()
          
         
         self.inventory.draw()

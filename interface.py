@@ -154,7 +154,7 @@ class Chat():
     def update(self):
         for key in self.world.keyspress:
             if key == pygame.K_RETURN:
-                if self.chatting:
+                if self.chatting and len(self.chatstring)>0:
                      self.world.client.sendchat(str.join("",self.chatstring))
                 self.chatting = not self.chatting
                 self.chatstring=[]

@@ -104,12 +104,7 @@ class Client:
         self.writestring(chat)
         self.sendmessage()
         
-    def sendmove(self,x,y):
-        self.clearbuffer()
-        self.writebyte(send_codes["move"])
-        self.writedouble(x)
-        self.writedouble(y)
-        self.sendmessage()
+    
         
     def handlepacket(self):
         event_id=self.readbyte()
@@ -162,9 +157,10 @@ class Client:
         pid=self.readbyte()
         c=self.world.findPlayer(pid)
         if not c == None:
-            x=self.readdouble()
-            y=self.readdouble()
-            c.move((x,y))
+            c.inputs=[self.readbit(),self.readbit(),self.readbit(),self.readbit()]
+            c.x=self.readdouble()
+            c.y=self.readdouble()
+
     def case_message_register(self):
         self.loginmessage=self.readstring()
         print(self.loginmessage)
@@ -206,7 +202,7 @@ class Client:
         x = self.readdouble()
         y = self.readdouble()
         #print(str((x,y)))
-        p=player_other(self.world, name, pid, x, y)
+        p=player_other(self.world, name, pid, x, y).start()
         self.world.otherplayers.append(p)
         print(name + " joined")
     def case_message_ping(self):
