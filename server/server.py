@@ -3,6 +3,7 @@ import socket
 import sys
 from threading import Thread, Lock
 from serverclient import Client
+from terrain import terrain
 import time
 
 sys.path.insert(1, 'D:/work/network base/network')
@@ -23,6 +24,8 @@ class Server:
         self.max_clients = max_clients
         self.clients = []#players
         self.items = []#items on the ground
+        self.terrain=terrain(self)
+        
         self.port = port
         self.ip = ip
         self.socket = None
@@ -78,6 +81,10 @@ class Server:
             if "/save" in x:
                 self.db.commit()
                 print("committed to database")
+            if "/terrain" in x:
+                self.terrain.load()
+                for players in self.clients:
+                    self.terrain.send(players)
     def start(self):
         #create new socket
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

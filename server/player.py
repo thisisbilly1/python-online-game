@@ -22,6 +22,7 @@ class player:
     def update(self):
         start_time=time.time()
         while self.running:
+            #TODO: add simulation of movement on the server for clients
             #self.move()
             time.sleep(1.0/self.FPS - ((time.time() - start_time) % (1.0/self.FPS)))
     

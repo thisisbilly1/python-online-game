@@ -11,13 +11,15 @@ sys.path.insert(1, 'D:/work/python online game/network')
 from NetworkConstants import login_status
 sys.path.insert(1, 'D:/work/python online game/game')
 from items import groundItem
-from Wall import Wall
+from Wall import wall
 
 
 
 class world:
     def __init__(self):
-        self.objects=[Wall(self,0,200,350,16)]
+        self.displaysize=(980,620)
+        self.worldsize=(0,0)
+        self.walls=[]
         self.otherplayers=[]
         self.grounditems=[]
         self.inventory=Inventory(self)
@@ -32,14 +34,24 @@ class world:
         self.mouse_left=False
         self.mouse_left_up=False
         self.mouse_left_down=False
+        
         self.mouse_right=False
         self.mouse_right_up=False
         self.mouse_right_down=False
+        
+        self.mouse_middle=False
+        self.mouse_middle_up=False
+        self.mouse_middle_down=False
+        
         self.mouse_left_previous=False
         self.mouse_right_previous=False
+        self.mouse_middle_previous=False
         
         #network
         self.client=Client("127.0.0.1",1337, self).start()
+        #wait for terrain to load from server
+        
+        
         
         #log in screen
         self.loggedin=False
@@ -81,17 +93,20 @@ class world:
         pygame.init()
         pygame.font.init()
         self.fontobject = pygame.font.Font(None,18)
-        self.size=(300,300)
-        #self.scene=np.ones((self.size[0],self.size[1],3),np.uint8)*255
-        self.screen = pygame.display.set_mode(self.size)
+        self.screen = pygame.display.set_mode(self.displaysize)
         self.clock=pygame.time.Clock()
         self.FPS=200#60
         self.running=True
         
         #players
-        self.player=player_self(self, name, self.client.pid, 0, 0).start()
-        self.client.updatePlayerStart()
-         
+        self.player=player_self(self, name, self.client.pid, 100, 10).start()
+        
+        #self.client.updatePlayerStart()
+        
+        #view port
+        self.viewport=[0,0]#[int(self.player.x+self.displaysize[0]/2),int(self.player.y+self.displaysize[1]/2)]
+        self.viewboxdim=[100,100] #w, h
+        
     def start(self):
         if self.loggedin==True:
             self.update()
@@ -99,6 +114,8 @@ class world:
     
     def update(self):
         while self.running:
+            self.keyspress=[]#reset the tapped keys
+            
             self.draw()
             
             #reset the mouse vars
@@ -106,15 +123,20 @@ class world:
             self.mouse_left_down=False
             self.mouse_right_up=False
             self.mouse_right_down=False
-
+            self.mouse_middle_up=False
+            self.mouse_middle_down=False
+            
             self.mouse_left_previous=self.mouse_left
             self.mouse_right_previous=self.mouse_right
+            self.mouse_middle_previous=self.mouse_middle
+            
             #mouse inputs
             mouse = pygame.mouse.get_pos() 
             self.mouse_x=mouse[0]
             self.mouse_y=mouse[1]
             clicks = pygame.mouse.get_pressed()
             self.mouse_left=clicks[0]
+            self.mouse_middle=clicks[1]
             self.mouse_right=clicks[2]
             
             if self.mouse_left and self.mouse_left_previous==False:
@@ -125,7 +147,11 @@ class world:
                 self.mouse_left_up=True
             if self.mouse_right==False and self.mouse_right_previous:
                 self.mouse_right_up=True
-            
+            if self.mouse_middle and self.mouse_middle_previous==False:
+                self.mouse_middle_down=True
+            if self.mouse_middle==False and self.mouse_middle_previous:
+                self.mouse_middle_up=True
+                
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.stop()
@@ -146,8 +172,32 @@ class world:
             #self.player.update()
             self.chat.update()
             self.inventory.update()
-    
-            self.keyspress=[]#reset the tapped keys
+            
+            #update the view port
+            
+            centerx=-(self.player.x-self.displaysize[0]/2)
+            centery=-(self.player.y-self.displaysize[1]/2)
+            if self.viewport[0]<centerx-self.viewboxdim[0]:
+                self.viewport[0]=centerx-self.viewboxdim[0]
+            if self.viewport[0]>centerx+self.viewboxdim[0]:
+                self.viewport[0]=centerx+self.viewboxdim[0]
+            if self.viewport[1]<centery-self.viewboxdim[1]:
+                self.viewport[1]=centery-self.viewboxdim[1]
+            if self.viewport[1]>centery+self.viewboxdim[1]:
+                self.viewport[1]=centery+self.viewboxdim[1]
+            #self.viewport[0]=-(self.player.x-self.displaysize[0]/2)
+            #self.viewport[1]=-(self.player.y-self.displaysize[1]/2)
+            
+            '''
+            if self.chat.chatting==False:
+                if ord("g") in self.keyspress or self.mouse_middle_down:
+                        self.mouse_drag_pos=(self.mouse_x,self.mouse_y)
+                if ord("g") in self.keyspressed or self.mouse_middle:
+                    self.viewport[0]+=self.mouse_x-self.mouse_drag_pos[0]
+                    self.viewport[1]+=self.mouse_y-self.mouse_drag_pos[1]
+                    self.mouse_drag_pos=(self.mouse_x,self.mouse_y)
+            '''
+            #print(self.viewport)
             
             
            
@@ -160,13 +210,33 @@ class world:
         
         for i in self.grounditems:
             i.draw()
-        for o in self.objects:
-            o.draw()
-         
+        '''
+        for x in self.walls:
+            for y in x:
+                if not y==None:
+                    y.draw()
+         '''
+        xx=self.viewport[0]
+        yy=self.viewport[1]
+        #print(xx,yy)
+        #wallsrendered=0
+        for x in range(max(int(-xx/16),0),min(len(self.walls),int((self.displaysize[0]-xx+16)/16))):
+            #for y in range(len(x)):
+            for y in range(max(int(-yy/16),0),min(len(self.walls[x]),int((self.displaysize[1]-yy+16)/16))):
+                if not self.walls[x][y]==None:
+                    self.walls[x][y].draw()
+                    #wallsrendered+=1
+        #print(wallsrendered)
         
         self.inventory.draw()
         self.chat.draw()
         self.rightclick.draw()
+        
+        #draw bounding box of world
+        pygame.draw.line(self.screen, (0,0,0), (xx,yy),(xx,self.worldsize[1]+yy),1)
+        pygame.draw.line(self.screen, (0,0,0), (xx,yy),(self.worldsize[0]+xx,yy),1)
+        pygame.draw.line(self.screen, (0,0,0), (xx,self.worldsize[1]+yy),(self.worldsize[0]+xx,self.worldsize[1]+yy),1)
+        pygame.draw.line(self.screen, (0,0,0), (self.worldsize[0]+xx,yy),(self.worldsize[0]+xx,self.worldsize[1]+yy),1)
         
         pygame.display.update()
         self.clock.tick(self.FPS)

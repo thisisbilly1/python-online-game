@@ -52,6 +52,9 @@ class Client(threading.Thread):
                 
     def run(self):
         #print(self.pid)
+        #send the terrain
+
+        
         while self.connected:
             try:
                 self.buffer.Buffer = self.connection.recv(1024)
@@ -95,7 +98,11 @@ class Client(threading.Thread):
         if event_id == receive_codes["inventory"]:
             #request to update inventory
             self.case_message_inventory()
-
+        if event_id == receive_codes["terrain"]:
+            self.case_message_send_terrain()
+    
+    def case_message_send_terrain(self):
+        self.server.terrain.send(self)
         
     def case_message_inventory(self):
         #print("1")
@@ -336,7 +343,8 @@ class Client(threading.Thread):
         self.writebyte(self.pid)
         self.sendmessage_all(False)
         self.connected = False
-        self.player.running=False
+        if not self.player==None:
+            self.player.running=False
         if self in self.server.clients:
             self.server.clients.remove(self)
         

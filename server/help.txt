@@ -8,3 +8,5 @@
 	sends a chat message to all clients
 /save
 	saves player to database
+/load terrain
+	loads the terrain and sends it to the clients

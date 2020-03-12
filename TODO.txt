@@ -1,6 +1,12 @@
-add platforming
-load terrain from server
+fix obj collision
+	optimize collision so that it only checks whats in range, same as drawing
 
+load terrain from server
+	terrain editor for server
+	server loads terrain
+	server sends terrain
+	-view port based on player location
+	-area udpates for player movement etc (chat?)...
 4. define my MMO goals
 	-NPCS
 	-combat

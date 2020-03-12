@@ -12,6 +12,7 @@ from NetworkConstants import receive_codes, send_codes, login_status
 
 sys.path.insert(1, 'D:/work/python online game/game')
 from items import groundItem
+from terrain_codes import terrain_codes
 
 class Client:
     def __init__(self, ip, port, world):
@@ -51,6 +52,13 @@ class Client:
         self.running = True
         print("connected")
         Thread(target=self.update,args=()).start()
+        
+        #send the request for the terrain
+        self.clearbuffer()
+        self.writebyte(send_codes["terrain"])
+        self.sendmessage()
+        print("loading terrain from server...")
+        
         return self
     def log(self, username, password, login):
         #login : False=Register   True=Log in
@@ -81,7 +89,7 @@ class Client:
                     
                     #if we have not gotten enough data, keep receiving
                     while(len(self.buffer.Buffer)+2<msg_size):
-                        self.buffer.Buffer+=self.connection.recv(1024)
+                        self.buffer.Buffer+=self.socket.recv(1024)
                         packet_size=len(self.buffer.Buffer)+2
                     
                     self.handlepacket()
@@ -128,6 +136,30 @@ class Client:
             self.case_message_item_drop()
         if event_id == receive_codes["item_pickup"]:#dropped item
             self.case_message_item_pickup()
+        if event_id == receive_codes["terrain"]:#load terrain
+            self.case_message_terrain()
+            
+    def case_message_terrain(self):
+        w=self.readint()
+        h=self.readint()
+        self.world.walls=[]
+        self.world.worldsize=(w*16,h*16)
+        print(self.world.worldsize)
+        wallstring=self.readstring()
+        count=0
+        for x in range(w):
+            self.world.walls.append([])
+            for y in range(h):
+                if not terrain_codes[wallstring[count:count+2]]==None:
+                    obj=terrain_codes[wallstring[count:count+2]](self.world,x*16,y*16,16,16)
+                else:
+                    obj=None
+                self.world.walls[len(self.world.walls)-1].append(obj)
+                count+=2
+        #print(wallstring)
+        #print(count)
+        #print(self.world.walls)
+        print("loaded terrain")
     def case_message_item_pickup(self):
         iid=self.readdouble()
         for i in self.world.grounditems:

@@ -88,13 +88,13 @@ class groundItem:
         self.quantity=quantity
         self.name=name
         self.world=world
-        self.width=8
-        self.height=8
-        self.box=[self.x,self.y,self.width,self.height]
-        self.image=pygame.Surface((self.width,self.height))
-        self.image.fill((0,0,255))
-        self.rect = self.image.get_rect()
-        self.rect = self.image.get_rect().move(self.x,self.y)
+        self.w=8
+        self.h=8
+        #self.box=[self.x,self.y,self.width,self.height]
+        #self.image=pygame.Surface((self.width,self.height))
+        #self.image.fill((0,0,255))
+        #self.rect = self.image.get_rect()
+        #self.rect = self.image.get_rect().move(self.x,self.y)
         self.options={
             "take": self.take,
             "examine": self.examine
@@ -110,21 +110,27 @@ class groundItem:
     def examine(self,args=()):
         items[self.name].examine([self.world])
     def draw(self):
-        global fontobject
+        xx=self.world.viewport[0]
+        yy=self.world.viewport[1]
+        box=[self.x+xx,self.y+yy,self.w,self.h]
+        
         #check if the person is clicking on it
-        if checkmousebox(self.box,(self.world.mouse_x,self.world.mouse_y)):
+        if checkmousebox(box,(self.world.mouse_x,self.world.mouse_y)):
             if self.world.mouse_left_down:
                 self.take()
             if self.world.mouse_right_down:
                 options=list(self.options.keys())
                 self.world.rightclick.click(self.world.mouse_x, self.world.mouse_y, options, self)
         
-        self.world.screen.blit(self.image, self.rect)
+        #self.world.screen.blit(self.image, self.rect)
+        pygame.draw.rect(self.world.screen, (0,0,255),
+                         (box[0]+1,box[1]+1,
+                          box[2]-1,box[3]-1), 0)
         
-        self.world.screen.blit(self.world.fontobject.render(str(self.name), 1, (0,0,0)),(self.x,self.y-self.height)) 
+        self.world.screen.blit(self.world.fontobject.render(str(self.name), 1, (0,0,0)),(box[0],box[1])) 
         if self.quantity>1:
             q,color=displayStack(self.quantity)
-            self.world.screen.blit(self.world.fontobject.render(q, 1, color),(self.x,self.y)) 
+            self.world.screen.blit(self.world.fontobject.render(q, 1, color),(box[0],box[1]-10)) 
 #print(list(items["coins"].options.keys()))
 #st="coins"
 #print(items[st].examine())

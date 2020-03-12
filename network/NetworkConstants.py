@@ -8,7 +8,8 @@ receive_codes = {
     "move": 6,
     "inventory": 7,
     "item_drop":8,
-    "item_pickup":9
+    "item_pickup":9,
+    "terrain": 10
     }
 send_codes = {
     "ping": 0,
@@ -20,7 +21,8 @@ send_codes = {
     "move": 6,
     "inventory": 7,
     "item_drop":8,
-    "item_pickup":9
+    "item_pickup":9,
+    "terrain": 10
     }
 
 login_status={
