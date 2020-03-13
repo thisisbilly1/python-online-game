@@ -130,7 +130,7 @@ class Client(threading.Thread):
             self.player.inventory[clickID], self.player.inventory[hoverID] = self.player.inventory[hoverID], self.player.inventory[clickID]
         elif t==inventory_codes["drop"]:#drop item
             clickID=self.readbyte()
-            i=Serveritem(self.server,len(self.server.items)+1,self.player.inventory[clickID],self.player.x,self.player.y)
+            i=Serveritem(self.server,len(self.server.items)+1,self.player.inventory[clickID],self.player.x,self.player.y,pid=self.pid)
             self.server.items.append(i)
             self.player.inventory[clickID]=None
         elif t==inventory_codes["pickup"]:
@@ -283,7 +283,8 @@ class Client(threading.Thread):
                     self.sendmessage()
             #get all the items
             for i in self.server.items:
-                i.create(self)
+                if i.pid==None:
+                    i.create(self)
                     
     def case_message_move(self):
         self.player.inputs=[self.readbit(),self.readbit(),self.readbit(),self.readbit()]

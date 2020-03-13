@@ -16,14 +16,18 @@ class wall(Obj):
         #self.image.fill((0,0,0))
         #self.rect = self.image.get_rect()
         
-    def draw(self):
+    def draw(self,editing=False):
         xx=self.world.viewport[0]
         yy=self.world.viewport[1]
         box=[self.x+xx,self.y+yy,self.w,self.h]
-        
-        pygame.draw.rect(self.world.screen, (0,0,0),
-                         (box[0],box[1],
-                          box[2],box[3]), 0)
-        
+        if editing:
+            pygame.draw.rect(self.world.screen, (0,0,0),
+                         (box[0]+1,box[1]+1,
+                          box[2]-1,box[3]-1), 0)
+        else:
+            pygame.draw.rect(self.world.screen, (0,0,0),
+                             (box[0],box[1],
+                              box[2],box[3]), 0)
+            
         #self.rect = self.image.get_rect().move(int(self.x),int(self.y))
         #self.world.screen.blit(self.image, self.rect)

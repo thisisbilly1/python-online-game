@@ -1,4 +1,4 @@
-from Wall import wall
+from wall import wall
 
 terrain_codes={
     "00": None,

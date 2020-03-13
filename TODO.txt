@@ -1,11 +1,8 @@
-test optimization of players etc...
+-area udpates for player (chat?)...
 
 load terrain from server
-	terrain editor for server
-	server loads terrain
-	server sends terrain
-	-view port based on player location
-	-area udpates for player movement etc (chat?)...
+	add more blocks different textures or whatever enemies
+
 4. define my MMO goals
 	-NPCS
 	-combat

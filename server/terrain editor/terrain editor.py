@@ -54,8 +54,7 @@ class world:
         self.FPS=200#60
         self.running=True
         
-        self.xx=0
-        self.yy=0
+        self.viewport=[0,0]
         self.mouse_drag_pos=(0,0)
         
     def update(self):
@@ -127,26 +126,26 @@ class world:
             if ord("g") in self.keyspress or self.mouse_middle_down:
                 self.mouse_drag_pos=(self.mouse_x,self.mouse_y)
             if ord("g") in self.keyspressed or self.mouse_middle:
-                self.xx+=self.mouse_x-self.mouse_drag_pos[0]
-                self.yy+=self.mouse_y-self.mouse_drag_pos[1]
+                self.viewport[0]+=self.mouse_x-self.mouse_drag_pos[0]
+                self.viewport[1]+=self.mouse_y-self.mouse_drag_pos[1]
                 self.mouse_drag_pos=(self.mouse_x,self.mouse_y)
             #print(self.xx,self.yy)
     def draw(self):
         self.screen.fill((255,255,255))
         self.controller.draw()
         #wallsrendered=0
-        for x in range(max(int(-self.xx/16),0),min(len(self.walls),int((self.displaysize[0]-self.xx+16)/16))):
+        for x in range(max(int(-self.viewport[0]/16),0),min(len(self.walls),int((self.displaysize[0]-self.viewport[0]+16)/16))):
             #for y in range(len(x)):
-            for y in range(max(int(-self.yy/16),0),min(len(self.walls[x]),int((self.displaysize[1]-self.yy+16)/16))):
+            for y in range(max(int(-self.viewport[1]/16),0),min(len(self.walls[x]),int((self.displaysize[1]-self.viewport[1]+16)/16))):
                 if not self.walls[x][y]==None:
-                    self.walls[x][y].draw()
+                    self.walls[x][y].draw(editing=True)
                     #wallsrendered+=1
         #print(wallsrendered) 
 
-        pygame.draw.line(self.screen, (0,0,0), (0+self.xx,0+self.yy),(0+self.xx,self.size[1]+self.yy),1)
-        pygame.draw.line(self.screen, (0,0,0), (0+self.xx,0+self.yy),(self.size[0]+self.xx,0+self.yy),1)
-        pygame.draw.line(self.screen, (0,0,0), (0+self.xx,self.size[1]+self.yy),(self.size[0]+self.xx,self.size[1]+self.yy),1)
-        pygame.draw.line(self.screen, (0,0,0), (self.size[0]+self.xx,0+self.yy),(self.size[0]+self.xx,self.size[1]+self.yy),1)
+        pygame.draw.line(self.screen, (0,0,0), (0+self.viewport[0],0+self.viewport[1]),(0+self.viewport[0],self.size[1]+self.viewport[1]),1)
+        pygame.draw.line(self.screen, (0,0,0), (0+self.viewport[0],0+self.viewport[1]),(self.size[0]+self.viewport[0],0+self.viewport[1]),1)
+        pygame.draw.line(self.screen, (0,0,0), (0+self.viewport[0],self.size[1]+self.viewport[1]),(self.size[0]+self.viewport[0],self.size[1]+self.viewport[1]),1)
+        pygame.draw.line(self.screen, (0,0,0), (self.size[0]+self.viewport[0],0+self.viewport[1]),(self.size[0]+self.viewport[0],self.size[1]+self.viewport[1]),1)
         pygame.display.update()
         self.clock.tick(self.FPS)
     def stop(self):

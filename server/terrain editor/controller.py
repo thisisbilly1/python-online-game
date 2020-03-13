@@ -1,7 +1,11 @@
 import pygame
 import math
-from wall import wall
 import pickle
+
+import sys
+sys.path.insert(1, '../../game')
+from terrain_codes import terrain_codes
+from wall import wall
 
 def roundup(x):
     return int(math.ceil(x / 16.0)) * 16
@@ -34,14 +38,14 @@ class controller:
             for x in range(len(saveWalls)):
                 #walls.append([])
                 for y in range(len(saveWalls[x])):
-                    if saveWalls[x][y]=="01":
-                        self.world.walls[x][y]=wall(self.world,x*16,y*16,16,16)  
-                    else:
+                    if saveWalls[x][y]=="00":
                         self.world.walls[x][y]=None  
+                    else:
+                        self.world.walls[x][y]=terrain_codes[saveWalls[x][y]](self.world,x*16,y*16,16,16)
                         
             print("loaded")
         except Exception as e:
-            print(e)
+            print("failed to load: "+str(e))
             
     def save(self):
         #convert the walls into non objects
@@ -59,8 +63,8 @@ class controller:
             print("saved")
     
     def update(self):
-        worldx=self.world.xx
-        worldy=self.world.yy
+        worldx=self.world.viewport[0]
+        worldy=self.world.viewport[1]
         
         #saving/loading
         if ord("s") in self.world.keyspress:
@@ -118,8 +122,8 @@ class controller:
                 #print("deleted")
             '''
     def draw(self):
-        worldx=self.world.xx
-        worldy=self.world.yy
+        worldx=self.world.viewport[0]
+        worldy=self.world.viewport[1]
         xx=roundup(self.world.mouse_x-20)+worldx%16
         yy=roundup(self.world.mouse_y-20)+worldy%16
         

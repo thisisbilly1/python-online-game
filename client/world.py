@@ -11,7 +11,7 @@ sys.path.insert(1, '..//network')
 from NetworkConstants import login_status
 sys.path.insert(1, '..//game')
 from items import groundItem
-from Wall import wall
+from wall import wall
 
 
 
