@@ -1,6 +1,7 @@
 import pickle
 import sys
-sys.path.insert(1, 'D:/work/python online game/network')
+#sys.path.insert(1, 'D:/work/python online game/network')
+sys.path.insert(1, '..//network')
 from NetworkConstants import send_codes
 
 class terrain:

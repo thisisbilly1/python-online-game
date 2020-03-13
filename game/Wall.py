@@ -1,6 +1,6 @@
 import sys
-sys.path.insert(1, 'D:/work/python online game/game')
 from Obj import Obj
+
 import pygame
 class wall(Obj):
     def __init__(self,world,x,y,w,h):

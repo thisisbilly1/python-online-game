@@ -3,8 +3,9 @@ import pygame
 from threading import Thread
 import time
 import sys
-sys.path.insert(1, 'D:/work/python online game/network')
+sys.path.insert(1, '..//network')
 from NetworkConstants import send_codes
+
 class player_self(Player):
     def __init__(self, world, name, pid,  x, y):
         super().__init__(world, name, pid, x, y)

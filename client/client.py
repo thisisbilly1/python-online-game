@@ -6,11 +6,11 @@ import struct
 from threading import Thread
 from player_other import player_other
 
-sys.path.insert(1, 'D:/work/python online game/network')
+sys.path.insert(1, '..//network')
 import Network
 from NetworkConstants import receive_codes, send_codes, login_status
 
-sys.path.insert(1, 'D:/work/python online game/game')
+sys.path.insert(1, '..//game')
 from items import groundItem
 from terrain_codes import terrain_codes
 

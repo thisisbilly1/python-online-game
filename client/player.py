@@ -2,7 +2,7 @@ import time
 from threading import Thread
 import pygame
 import sys
-sys.path.insert(1, 'D:/work/python online game/game')
+sys.path.insert(1, '..//game')
 from Obj import Obj
 
 class Player(Obj):

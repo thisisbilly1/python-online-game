@@ -6,7 +6,7 @@ import threading
 from player import player
 from item import Serveritem
 
-sys.path.insert(1, 'D:/work/python online game/network')
+sys.path.insert(1, '..//network')
 import Network
 from NetworkConstants import receive_codes, send_codes, inventory_codes
 

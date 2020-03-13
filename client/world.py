@@ -7,9 +7,9 @@ from client import Client
 from loginscreen import LoginScreen
 import sys
 from interface import Inventory, Chat, rightClick
-sys.path.insert(1, 'D:/work/python online game/network')
+sys.path.insert(1, '..//network')
 from NetworkConstants import login_status
-sys.path.insert(1, 'D:/work/python online game/game')
+sys.path.insert(1, '..//game')
 from items import groundItem
 from Wall import wall
 
@@ -205,7 +205,7 @@ class world:
         self.screen.fill((255,255,255))
         
         self.player.draw()
-        rendered=0
+        
         xx=self.viewport[0]
         yy=self.viewport[1]
         for c in self.otherplayers:
@@ -214,7 +214,7 @@ class world:
              if (self.player.x-self.displaysize[0]<c.x<self.player.x+self.displaysize[0]
                 and self.player.y-self.displaysize[1]<c.y<self.player.y+self.displaysize[1]):
                  c.draw()
-                 rendered+=1
+                 
         
         for i in self.grounditems:
             #if (xx-self.displaysize[0]<i.x<xx+self.displaysize[0]
@@ -222,8 +222,7 @@ class world:
             if (self.player.x-self.displaysize[0]<i.x<self.player.x+self.displaysize[0]
                 and self.player.y-self.displaysize[1]<i.y<self.player.y+self.displaysize[1]):
                     i.draw()
-                    rendered+=1
-        print(rendered)
+                   
         '''
         for x in self.walls:
             for y in x:

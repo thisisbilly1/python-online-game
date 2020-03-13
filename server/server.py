@@ -6,10 +6,10 @@ from serverclient import Client
 from terrain import terrain
 import time
 
-sys.path.insert(1, 'D:/work/network base/network')
+sys.path.insert(1, '..//network')
 from NetworkConstants import receive_codes, send_codes
 
-sys.path.insert(1, 'D:/work/python online game/server/sqlite')
+sys.path.insert(1, '/sqlite')
 import sqlite3
 '''
 def dict_factory(cursor, row):

@@ -1,7 +1,7 @@
 import sys
-sys.path.insert(1, 'D:/work/python online game/network')
+sys.path.insert(1, '..//network')
 from NetworkConstants import send_codes
-sys.path.insert(1, 'D:\work\python online game\game')
+sys.path.insert(1, '..//game')
 from items import items, item
 class Serveritem():
     def __init__(self, server, iid, data, x, y):
