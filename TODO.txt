@@ -1,5 +1,4 @@
-fix obj collision
-	optimize collision so that it only checks whats in range, same as drawing
+test optimization of players etc...
 
 load terrain from server
 	terrain editor for server

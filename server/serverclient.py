@@ -25,8 +25,18 @@ class Client(threading.Thread):
         self.buffer = Network.Buff()
         self.player = None
         self.name = None
+        
+        self.ping=0
     def getpid(self):
         return self.pid
+    def sendmessage_distance(self):
+        for c in self.server.clients:
+            if not c == self:
+                if not c.player==None:
+                    if (self.player.x-self.server.sendsize[0]<c.player.x<self.player.x+self.server.sendsize[0]
+                        and self.player.y-self.server.sendsize[1]<c.player.y<self.player.y+self.server.sendsize[1]):
+                        c.sendmessage(self.buffer)
+                    
     def sendmessage(self, buff=None, debuf=False):
         if buff == None:
             buff=self.buffer
@@ -56,6 +66,10 @@ class Client(threading.Thread):
 
         
         while self.connected:
+            if self.ping>1000:
+                self.running=False
+                self.disconnect_user()
+                return
             try:
                 self.buffer.Buffer = self.connection.recv(1024)
                 #self.buffer.Buffer0 = self.buffer.Buffer
@@ -75,8 +89,11 @@ class Client(threading.Thread):
                     while((packet_size-len(self.buffer.Buffer))<msg_size):
                         self.readbyte()
                         
-            except ConnectionResetError:
-                self.disconnect_user()
+            except Exception as e:#ConnectionResetError:
+                #print(e)
+                #self.connected=False
+                #self.disconnect_user()
+                self.ping+=1
 
     def handlepacket(self):
         event_id=self.readbyte()
@@ -284,7 +301,8 @@ class Client(threading.Thread):
         self.writedouble(self.player.x)
         self.writedouble(self.player.y)
         
-        self.sendmessage_all(False)
+        #self.sendmessage_all(False)
+        self.sendmessage_distance()
         
     def case_message_chat(self):
         text=self.readstring()
@@ -311,7 +329,7 @@ class Client(threading.Thread):
         print(self.name+ " disconnected")
         
         #save into db
-        if self.player!=None:
+        if not self.player==None:
             self.server.sql("UPDATE Players SET x=?, y=? WHERE username=?", 
                             (self.player.x, self.player.y, self.name))
             
@@ -337,14 +355,15 @@ class Client(threading.Thread):
             #commit to database
             self.server.sql("COMMIT")
         
-        self.clearbuffer()
-        self.writebyte(send_codes["leave"])
-        self.writestring(self.name)
-        self.writebyte(self.pid)
-        self.sendmessage_all(False)
-        self.connected = False
-        if not self.player==None:
+            self.clearbuffer()
+            self.writebyte(send_codes["leave"])
+            self.writestring(self.name)
+            self.writebyte(self.pid)
+            self.sendmessage_all(False)
+
             self.player.running=False
+            
+        self.connected = False  
         if self in self.server.clients:
             self.server.clients.remove(self)
         

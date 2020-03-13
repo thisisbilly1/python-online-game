@@ -49,8 +49,7 @@ class Player(Obj):
         
         self.collision()
         
-        self.x+=self.xvel
-        self.y+=self.yvel
+
             
         self.xvel=self.xvel*(1-self.friction)
         

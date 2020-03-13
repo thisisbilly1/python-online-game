@@ -98,9 +98,11 @@ class Client:
                     while((packet_size-len(self.buffer.Buffer))<msg_size):
                         self.readbyte()
                         
-            except ConnectionResetError:
-                self.disconnect_user()
-   
+            except Exception as e:# ConnectionResetError:
+                print(e)
+                self.running=False
+                #self.disconnect_user()
+        print("client disconnected")
     def sendping(self):
         self.clearbuffer()
         self.writebyte(send_codes["ping"])

@@ -13,6 +13,9 @@ class player_self(Player):
         self.namecolor=(255,0,255)
         self.prev_inputs=self.inputs
         
+        #update to the server every once in a while 
+        self.min_update_max=30
+        self.min_update_time=self.min_update_max
     def start(self):
         Thread(target=self.update,args=()).start()
         return self
@@ -34,7 +37,7 @@ class player_self(Player):
                 
                 
             #send packet if inputs updated
-            if not self.inputs==self.prev_inputs:
+            if (not self.inputs==self.prev_inputs) or self.min_update_time<=0:
                 #print("send move")
                 self.world.client.clearbuffer()
                 self.world.client.writebyte(send_codes["move"])
@@ -45,7 +48,10 @@ class player_self(Player):
                 self.world.client.writedouble(self.x)
                 self.world.client.writedouble(self.y)
                 self.world.client.sendmessage()
+                self.min_update_time=self.min_update_max
+                
             self.move()
+            self.min_update_time-=1
             #cap fps
             time.sleep(1.0/self.world.FPS - ((time.time() - start_time) % (1.0/self.world.FPS)))
     

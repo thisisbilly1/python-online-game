@@ -11,6 +11,8 @@ class Obj():
         self.xvel=0
         self.yvel=0
         
+        self.maxvel=3
+        
         self.onground=False
         self.w=w
         self.h=h
@@ -22,20 +24,23 @@ class Obj():
         
     def collision(self):
         self.onground=False
-        for a in self.world.walls:
-            for i in a:
-                if not i==None:
+
+        checkrange=[int(2+abs(self.xvel*1)),int(2+abs(self.yvel*1))]#5x5 16 blocks
+        for x in range(max(int(self.x/16)-checkrange[0],0),min(len(self.world.walls),int((self.x)/16)+checkrange[0])):
+            for y in range(max(int(self.y/16)-checkrange[1],0),min(len(self.world.walls[x]),int((self.y)/16)+checkrange[1])):
+                if not self.world.walls[x][y]==None:
+                    i=self.world.walls[x][y]
                     if i.solid:
 
                         if (i.y<self.y+self.h-1 and i.y+i.h>self.y
                             and self.x+self.xvel+self.w>i.x
                             and self.x+self.xvel+self.w<i.x+i.w):
-                            self.xvel=0
+                            self.xvel=min(0,self.xvel)
                         				
                         if (i.y<self.y+self.h-1 and i.y+i.h>self.y
                             and self.x+self.xvel<i.x+i.w
                             and self.x+self.xvel>i.x):
-                            self.xvel=0   
+                            self.xvel=max(0,self.xvel)   
                         
                         #y collision
                         if (self.y+self.yvel+self.h>i.y
@@ -48,7 +53,6 @@ class Obj():
                                 #self.y=i.y-self.h
                             #else:
                                 #self.y=i.y+i.h
-        
         
         if self.y>self.world.worldsize[1]-self.height:
             self.y=self.world.worldsize[1]-self.height
@@ -72,4 +76,5 @@ class Obj():
         #if self.y<0:
             #self.y=0
             #self.yvel=0
-        
+        self.x+=min(self.xvel,self.maxvel)
+        self.y+=min(self.yvel,self.maxvel)

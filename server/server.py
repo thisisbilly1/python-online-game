@@ -25,6 +25,7 @@ class Server:
         self.clients = []#players
         self.items = []#items on the ground
         self.terrain=terrain(self)
+        self.sendsize=(300,300)#sending box size for player updating things
         
         self.port = port
         self.ip = ip

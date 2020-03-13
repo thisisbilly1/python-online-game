@@ -17,7 +17,7 @@ from Wall import wall
 
 class world:
     def __init__(self):
-        self.displaysize=(980,620)
+        self.displaysize=(300,300)#(980,620)
         self.worldsize=(0,0)
         self.walls=[]
         self.otherplayers=[]
@@ -105,7 +105,7 @@ class world:
         
         #view port
         self.viewport=[0,0]#[int(self.player.x+self.displaysize[0]/2),int(self.player.y+self.displaysize[1]/2)]
-        self.viewboxdim=[100,100] #w, h
+        self.viewboxdim=[50,50] #w, h
         
     def start(self):
         if self.loggedin==True:
@@ -205,11 +205,25 @@ class world:
         self.screen.fill((255,255,255))
         
         self.player.draw()
+        rendered=0
+        xx=self.viewport[0]
+        yy=self.viewport[1]
         for c in self.otherplayers:
-            c.draw()
+            #if (xx-self.displaysize[0]<c.x<xx+self.displaysize[0]
+                #and yy-self.displaysize[1]<c.y<yy+self.displaysize[1]):
+             if (self.player.x-self.displaysize[0]<c.x<self.player.x+self.displaysize[0]
+                and self.player.y-self.displaysize[1]<c.y<self.player.y+self.displaysize[1]):
+                 c.draw()
+                 rendered+=1
         
         for i in self.grounditems:
-            i.draw()
+            #if (xx-self.displaysize[0]<i.x<xx+self.displaysize[0]
+                #and yy-self.displaysize[1]<i.y<yy+self.displaysize[1]):
+            if (self.player.x-self.displaysize[0]<i.x<self.player.x+self.displaysize[0]
+                and self.player.y-self.displaysize[1]<i.y<self.player.y+self.displaysize[1]):
+                    i.draw()
+                    rendered+=1
+        print(rendered)
         '''
         for x in self.walls:
             for y in x:
