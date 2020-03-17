@@ -12,7 +12,9 @@ from NetworkConstants import receive_codes, send_codes, login_status
 
 sys.path.insert(1, '..//game')
 from items import groundItem
+from NPC import NPC
 from terrain_codes import terrain_codes
+from rangedattacks import rangedAttack
 
 class Client:
     def __init__(self, ip, port, world):
@@ -27,12 +29,20 @@ class Client:
         
         self.world=world
         
-        self.playerstartx=0
-        self.playerstarty=0
-        
-
         self.loginStatus=login_status["wait"]
         self.loginmessage=""
+        
+        
+        #starting variables
+        self.startx=0
+        self.starty=0
+        self.starthpmax=0
+        self.starthp=0
+        self.startmanamax=0
+        self.startmana=0
+        self.startstaminamax=0
+        self.startstamina=0
+        
     def sendmessage(self, buff=None, debuf=False):
         if buff == None:
             buff=self.buffer
@@ -140,6 +150,52 @@ class Client:
             self.case_message_item_pickup()
         if event_id == receive_codes["terrain"]:#load terrain
             self.case_message_terrain()
+        if event_id == receive_codes["npc_move"]:#npc moving
+            self.case_message_npc_move()
+        if event_id == receive_codes["npc_create"]:#npc create
+            self.case_message_npc_create()
+        if event_id == receive_codes["attack"]:#attack bullet create
+            self.case_message_attack()
+    def case_message_attack(self):
+        targetid=int(self.readdouble())
+        pid=int(self.readbyte())
+        if not pid==self.pid:
+            p=self.world.findPlayer(pid)
+        else:
+            p=self.world.player
+        t=self.world.findNPC(targetid)
+        if not t==None:
+            a=rangedAttack(self.world,t,p.x+p.w/2,p.y+p.h/2).start()
+            self.world.attacks.append(a)
+            
+            #trigger global cd
+            if pid==self.pid:
+                self.world.abilitybar.triggerGCD()
+        
+    def case_message_npc_create(self):
+        pid=int(self.readdouble())
+        name=self.readstring()
+        x=self.readdouble()
+        y=self.readdouble()
+        hpmax=self.readdouble()
+        hp=self.readdouble()
+        n=NPC(self.world, name, pid, x, y, hpmax)
+        n.hp=hp
+        self.world.npcs.append(n)
+        n.start()
+    
+    def case_message_npc_move(self):
+        pid=int(self.readdouble())
+        for n in self.world.npcs:
+            if n.pid==pid:
+                n.x=self.readdouble()
+                n.y=self.readdouble()
+                n.hp=self.readdouble()
+                #untarget if dead
+                if n.hp<=0:
+                    if self.world.combatstatusbars.target==n:
+                        self.world.combatstatusbars.target=None
+                break
             
     def case_message_terrain(self):
         w=self.readint()
@@ -211,8 +267,16 @@ class Client:
         login=self.readbit()
         if login:
             self.pid = self.readbyte()
-            self.playerstartx=self.readdouble()
-            self.playerstarty=self.readdouble()
+            self.startx=self.readdouble()
+            self.starty=self.readdouble()
+            
+            self.starthpmax=self.readdouble()
+            self.starthp=self.readdouble()
+            self.startmanamax=self.readdouble()
+            self.startmana=self.readdouble()
+            self.startstaminamax=self.readdouble()
+            self.startstamina=self.readdouble()
+            
             print("sucessfully logged in")
             self.loginStatus=login_status["success"]
         else:
@@ -260,8 +324,12 @@ class Client:
         self.sendmessage()
         self.running=False
         self.socket.close()
+        
     def updatePlayerStart(self):
-        self.world.player.startPosition((self.playerstartx,self.playerstarty))
+        self.world.player.startPosition((self.startx,self.starty))
+        self.world.combatstatusbars.startbars(self.starthpmax,self.starthp,
+                                        self.startmanamax, self.startmana, 
+                                        self.startstaminamax, self.startstamina)
     def updateInventory(self,t,sendList):
         self.clearbuffer()
         self.writebyte(send_codes["inventory"])

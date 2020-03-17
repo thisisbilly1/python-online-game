@@ -10,6 +10,7 @@ def checkmousebox(box,mouse):
             and box[1]+box[3]>mouse[1]>box[1]):
             return True
         return False
+    
 class rightClick:
     def __init__(self,world):
         self.world=world

@@ -1,10 +1,16 @@
--area udpates for player (chat?)...
+attacks
+	-ranged attack on server/clients
+	-melee
+ability bar
+	-auto attacks?
 
-load terrain from server
-	add more blocks different textures or whatever enemies
+do we need to simulate movement on server now? idk lol
 
-4. define my MMO goals
+
+
+define my MMO goals
 	-NPCS
+		-need to simulate movement on the server now lol
 	-combat
 		-classes
 		-Power points
@@ -14,14 +20,13 @@ load terrain from server
 
 	-quests
 	
-
+-area udpates for player (chat? need clan chats then)...
 inventory
 	-sprites for items
 	-noted items
 	-use items on stuff?
 
 	
-terrain loaded from server
 
 guest2891
 zi4DW431

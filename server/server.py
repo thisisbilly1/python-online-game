@@ -12,12 +12,15 @@ from NetworkConstants import receive_codes, send_codes
 sys.path.insert(1, '/sqlite')
 import sqlite3
 
+from npc import npc
+
 class Server:
     def __init__(self, max_clients, ip, port):
-        
+        self.FPS=200
         self.max_clients = max_clients
         self.clients = []#players
         self.items = []#items on the ground
+        self.npcs = [npc(self,"npc",0,300,100).start()]
         self.terrain=terrain(self)
         self.sendsize=(300,300)#sending box size for player updating things
         

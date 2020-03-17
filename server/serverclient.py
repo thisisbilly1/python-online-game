@@ -117,7 +117,30 @@ class Client(threading.Thread):
             self.case_message_inventory()
         if event_id == receive_codes["terrain"]:
             self.case_message_send_terrain()
+        if event_id == receive_codes["attack"]:
+            self.case_message_attack()
     
+    def case_message_attack(self):
+        isPlayer=self.readbit()
+        pid=int(self.readdouble())
+        if isPlayer:
+            for c in self.server.clients:
+                if c.pid==pid:
+                    self.player.target=c
+                    break
+        else:
+            for c in self.server.npcs:
+                if c.pid==pid:
+                    if c.hp>0:
+                        self.player.target=c
+                    else:
+                        self.player.target=None
+                    break
+        
+        self.player.attackinputs=[self.readbit()]
+        
+
+        #print(self.player.attackinputs)
     def case_message_send_terrain(self):
         self.server.terrain.send(self)
         
@@ -239,6 +262,7 @@ class Client(threading.Thread):
         
         x=0
         y=0
+        
         #log in or send message to client
         self.clearbuffer()
         self.writebyte(send_codes["login"])
@@ -246,10 +270,20 @@ class Client(threading.Thread):
         if login:
             x=result[3]#x
             y=result[4]#y
+            #start the player
+            self.player=player(self,x,y,invresult[2:],result[5:]).start()
 
+            
             self.writebyte(self.pid)
-            self.writedouble(x)
-            self.writedouble(y)
+            self.writedouble(self.player.x)
+            self.writedouble(self.player.y)
+            
+            self.writedouble(self.player.hpmax)
+            self.writedouble(self.player.hp)
+            self.writedouble(self.player.manamax)
+            self.writedouble(self.player.mana)
+            self.writedouble(self.player.staminamax)
+            self.writedouble(self.player.stamina)
             print(username+" logged in")
             self.name=username
         else:
@@ -258,8 +292,7 @@ class Client(threading.Thread):
         
         #send location to other players
         if login:
-            #create player and send inventory
-            self.player=player(self.name,x,y,invresult[2:]).start()
+            #send inventory
             self.send_inventory()
             
             #send join command to everyone else
@@ -267,8 +300,8 @@ class Client(threading.Thread):
             self.writebyte(send_codes["join"])
             self.writestring(self.name)
             self.writebyte(self.pid)
-            self.writedouble(x)
-            self.writedouble(y)
+            self.writedouble(self.player.x)
+            self.writedouble(self.player.y)
             self.sendmessage_all(False)
             
             #get the other players
@@ -281,10 +314,14 @@ class Client(threading.Thread):
                     self.writedouble(players.player.x)
                     self.writedouble(players.player.y)
                     self.sendmessage()
+            #get all the npcs
+            for i in self.server.npcs:
+                i.create(self)
             #get all the items
             for i in self.server.items:
                 if i.pid==None:
                     i.create(self)
+            
                     
     def case_message_move(self):
         self.player.inputs=[self.readbit(),self.readbit(),self.readbit(),self.readbit()]

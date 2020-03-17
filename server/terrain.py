@@ -25,7 +25,7 @@ class terrain:
             with open('./terrain editor/terrain.pkl','rb') as f:
                 wallList=pickle.load(f)
             self.wallsdim=(len(wallList),len(wallList[0]))
-            print(self.wallsdim)
+            #print(self.wallsdim)
             #print(self.wallsdim)
             #convert into a string
             for x in range(len(wallList)):

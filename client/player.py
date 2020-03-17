@@ -8,10 +8,10 @@ from Obj import Obj
 class Player(Obj):
     def __init__(self, world, name, pid, x, y):
         self.world=world
-        self.width=16
-        self.height=16
-        super().__init__(self.world,x,y,self.width,self.height)
+        super().__init__(self.world,x,y)
         
+        #self.w=32
+        #self.h=32
 
         
         #self.image=pygame.Surface((self.width,self.height))
@@ -30,6 +30,7 @@ class Player(Obj):
         self.namecolor=(0,0,0)
 
         self.inputs=[0,0,0,0]#left,right,up,down
+        self.attackinputs=[0,0,0,0,0]
         self.friction=0.1
          
     def getpid(self):
@@ -56,23 +57,24 @@ class Player(Obj):
         #print(self.x,self.y)
 
     def draw(self):
+       
         xx=self.world.viewport[0]
         yy=self.world.viewport[1]
         box=[self.x+xx,self.y+yy,self.w,self.h]
         pygame.draw.rect(self.world.screen, (255,0,0),
                          (box[0],box[1],
                           box[2],box[3]), 0)
-        
+            
         #self.rect.move(self.x, self.y)
         #self.rect = self.image.get_rect().move(int(self.x),int(self.y))
         #self.world.screen.blit(self.image, self.rect)
         
 
-        self.world.screen.blit(self.world.fontobject.render(self.name, 1, (0,0,0)),(box[0],box[1]-box[3])) 
+        self.world.screen.blit(self.world.fontobject.render(self.name, 1, self.namecolor),(box[0],box[1]-box[3])) 
         
         self.x_previous=self.x
         self.y_previous=self.y
-        #pygame.draw.rect(self.world.screen, (0, 0, 128), self.rect) # draw the rect at a variable location
+
         
 
         

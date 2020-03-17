@@ -13,10 +13,13 @@ class player_self(Player):
         self.client=self.world.client
         self.namecolor=(255,0,255)
         self.prev_inputs=self.inputs
+        self.prev_attackinputs=self.attackinputs
         
         #update to the server every once in a while 
         self.min_update_max=30
         self.min_update_time=self.min_update_max
+        
+        self.isPlayer=True
     def start(self):
         Thread(target=self.update,args=()).start()
         return self
@@ -24,9 +27,12 @@ class player_self(Player):
         start_time=time.time()
         while self.running:
             self.prev_inputs=self.inputs
+            self.prev_attackinputs=self.attackinputs
             self.inputs=[0,0,0,0]
+            self.attackinputs=[0,0,0,0,0]
             if self.world.chat.chatting==False:
                 for key in self.world.keyspressed:#pygame.event.get():
+                    #movement
                     if key == pygame.K_w:
                         self.inputs[2]=1
                     elif key == pygame.K_s:
@@ -35,9 +41,24 @@ class player_self(Player):
                         self.inputs[0]=1
                     elif key == pygame.K_d:
                         self.inputs[1]=1 
+                    #attacks
+                    if not self.world.combatstatusbars.target==None:
+                        for k in range(len(self.world.abilitybar.keybinds)):
+                            if key == (self.world.abilitybar.keybinds[k]):
+                                self.attackinputs[k]=1 
+                        
+            #send attack inputs packet
+            if (not self.attackinputs==self.prev_attackinputs):
+                #if self.attackinputs[0]:
+                self.world.client.clearbuffer()
+                self.world.client.writebyte(send_codes["attack"])
+                self.world.client.writebit(self.world.combatstatusbars.target.isPlayer)
+                self.world.client.writedouble(self.world.combatstatusbars.target.pid)
+                self.world.client.writebit(self.attackinputs[0])
+                self.world.client.sendmessage()
+                #print("a")
                 
-                
-            #send packet if inputs updated
+            #send move input packet
             if (not self.inputs==self.prev_inputs) or self.min_update_time<=0:
                 #print("send move")
                 self.world.client.clearbuffer()
@@ -60,6 +81,6 @@ class player_self(Player):
     
     def startPosition(self,position):
         self.x=position[0]
-        self.y=position[1]
-       
+        self.y=position[1]-10
+        
 

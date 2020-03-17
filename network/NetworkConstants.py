@@ -9,7 +9,10 @@ receive_codes = {
     "inventory": 7,
     "item_drop":8,
     "item_pickup":9,
-    "terrain": 10
+    "terrain": 10,
+    "npc_move":11,
+    "npc_create":12,
+    "attack":13
     }
 send_codes = {
     "ping": 0,
@@ -22,7 +25,10 @@ send_codes = {
     "inventory": 7,
     "item_drop":8,
     "item_pickup":9,
-    "terrain": 10
+    "terrain": 10,
+    "npc_move":11,
+    "npc_create":12,
+    "attack":13
     }
 
 login_status={

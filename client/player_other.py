@@ -6,7 +6,7 @@ class player_other(Player):
     def __init__(self, world, name, pid, x, y):
         super().__init__(world, name, pid, x, y)
         self.namecolor=(0,0,0)
-
+        self.isPlayer=True
         
     def start(self):
         Thread(target=self.update,args=()).start()

@@ -5,8 +5,11 @@ from player_self import player_self
 from player_other import player_other
 from client import Client
 from loginscreen import LoginScreen
-import sys
+
 from interface import Inventory, Chat, rightClick
+from combatinterfaces import statusbars, abilitybar
+
+import sys
 sys.path.insert(1, '..//network')
 from NetworkConstants import login_status
 sys.path.insert(1, '..//game')
@@ -15,17 +18,24 @@ from wall import wall
 
 
 
+
 class world:
     def __init__(self):
         self.displaysize=(300,300)#(980,620)
         self.worldsize=(0,0)
+        #objects
         self.walls=[]
+        self.npcs=[]
+        self.attacks=[]
         self.otherplayers=[]
         self.grounditems=[]
+        
+        #interfaces
         self.inventory=Inventory(self)
         self.chat=Chat(self)
         self.rightclick=rightClick(self)
-        
+        self.combatstatusbars=statusbars(self)
+        self.abilitybar=abilitybar(self)
         #inputs
         self.keyspressed=[] #for key HOLD DOWN
         self.keyspress=[] #for key DOWN 
@@ -94,19 +104,21 @@ class world:
         pygame.font.init()
         self.fontobject = pygame.font.Font(None,18)
         self.screen = pygame.display.set_mode(self.displaysize)
+        self.surface = pygame.Surface(self.displaysize, pygame.SRCALPHA)
         self.clock=pygame.time.Clock()
         self.FPS=200#60
         self.running=True
         
+
+        
         #players
         self.player=player_self(self, name, self.client.pid, 100, 10).start()
-        
-        #self.client.updatePlayerStart()
+        self.client.updatePlayerStart()
         
         #view port
         self.viewport=[0,0]#[int(self.player.x+self.displaysize[0]/2),int(self.player.y+self.displaysize[1]/2)]
         self.viewboxdim=[50,50] #w, h
-        
+
     def start(self):
         if self.loggedin==True:
             self.update()
@@ -203,55 +215,56 @@ class world:
            
     def draw(self):
         self.screen.fill((255,255,255))
+        self.surface.fill((0,0,0,0))
+        
+        #draw bounding box of world
+        pygame.draw.line(self.screen, (0,0,0), (self.viewport[0],self.viewport[1]),(self.viewport[0],self.worldsize[1]+self.viewport[1]),1)
+        pygame.draw.line(self.screen, (0,0,0), (self.viewport[0],self.viewport[1]),(self.worldsize[0]+self.viewport[0],self.viewport[1]),1)
+        pygame.draw.line(self.screen, (0,0,0), (self.viewport[0],self.worldsize[1]+self.viewport[1]),(self.worldsize[0]+self.viewport[0],self.worldsize[1]+self.viewport[1]),1)
+        pygame.draw.line(self.screen, (0,0,0), (self.worldsize[0]+self.viewport[0],self.viewport[1]),(self.worldsize[0]+self.viewport[0],self.worldsize[1]+self.viewport[1]),1)
         
         self.player.draw()
         
-        xx=self.viewport[0]
-        yy=self.viewport[1]
+        
+                 
+        for c in self.npcs:
+             if (self.player.x-self.displaysize[0]<c.x<self.player.x+self.displaysize[0]
+                and self.player.y-self.displaysize[1]<c.y<self.player.y+self.displaysize[1]):
+                 if c.hp>0:
+                     c.draw()
+
         for c in self.otherplayers:
-            #if (xx-self.displaysize[0]<c.x<xx+self.displaysize[0]
-                #and yy-self.displaysize[1]<c.y<yy+self.displaysize[1]):
              if (self.player.x-self.displaysize[0]<c.x<self.player.x+self.displaysize[0]
                 and self.player.y-self.displaysize[1]<c.y<self.player.y+self.displaysize[1]):
                  c.draw()
                  
         
         for i in self.grounditems:
-            #if (xx-self.displaysize[0]<i.x<xx+self.displaysize[0]
-                #and yy-self.displaysize[1]<i.y<yy+self.displaysize[1]):
             if (self.player.x-self.displaysize[0]<i.x<self.player.x+self.displaysize[0]
                 and self.player.y-self.displaysize[1]<i.y<self.player.y+self.displaysize[1]):
                     i.draw()
                    
-        '''
-        for x in self.walls:
-            for y in x:
-                if not y==None:
-                    y.draw()
-         '''
-        xx=self.viewport[0]
-        yy=self.viewport[1]
-        #print(xx,yy)
-        #wallsrendered=0
-        for x in range(max(int(-xx/16),0),min(len(self.walls),int((self.displaysize[0]-xx+16)/16))):
+
+        for x in range(max(int(-self.viewport[0]/16),0),min(len(self.walls),int((self.displaysize[0]-self.viewport[0]+16)/16))):
             #for y in range(len(x)):
-            for y in range(max(int(-yy/16),0),min(len(self.walls[x]),int((self.displaysize[1]-yy+16)/16))):
+            for y in range(max(int(-self.viewport[1]/16),0),min(len(self.walls[x]),int((self.displaysize[1]-self.viewport[1]+16)/16))):
                 if not self.walls[x][y]==None:
                     self.walls[x][y].draw()
-                    #wallsrendered+=1
-        #print(wallsrendered)
-        
+                    
+        for c in self.attacks:
+             if (self.player.x-self.displaysize[0]<c.x<self.player.x+self.displaysize[0]
+                and self.player.y-self.displaysize[1]<c.y<self.player.y+self.displaysize[1]):
+                 c.draw()
+        #interfaces
         self.inventory.draw()
         self.chat.draw()
         self.rightclick.draw()
+        self.combatstatusbars.draw()
+        self.abilitybar.draw()
         
-        #draw bounding box of world
-        pygame.draw.line(self.screen, (0,0,0), (xx,yy),(xx,self.worldsize[1]+yy),1)
-        pygame.draw.line(self.screen, (0,0,0), (xx,yy),(self.worldsize[0]+xx,yy),1)
-        pygame.draw.line(self.screen, (0,0,0), (xx,self.worldsize[1]+yy),(self.worldsize[0]+xx,self.worldsize[1]+yy),1)
-        pygame.draw.line(self.screen, (0,0,0), (self.worldsize[0]+xx,yy),(self.worldsize[0]+xx,self.worldsize[1]+yy),1)
-        
+        self.screen.blit(self.surface, (0,0))
         pygame.display.update()
+        
         self.clock.tick(self.FPS)
         
     def stop(self):
@@ -259,6 +272,8 @@ class world:
         self.player.stop()
         self.client.stop()
         for c in self.otherplayers:
+            c.stop()
+        for c in self.npcs:
             c.stop()
         pygame.quit() 
          
@@ -269,6 +284,12 @@ class world:
         print("cant find player with pid "+str(pid))
         return None
     
+    def findNPC(self, pid):
+        for c in self.npcs:
+            if c.pid==pid:
+                return c
+        print("cant find NPC with pid "+str(pid))
+        return None
     def findItem(self, iid):
         for i in self.grounditems:
             if i.getiid()==iid:

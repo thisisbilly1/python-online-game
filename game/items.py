@@ -108,7 +108,14 @@ class groundItem:
         self.world.client.sendmessage()
 
     def examine(self,args=()):
-        items[self.name].examine([self.world])
+        #items[self.name].examine([self.world])
+        world=args[0]
+        #clickID=args[1]
+        st=""
+        if items[self.name].stackable:#self.stackable:
+            st+=addcommas(int(self.quantity))+" "
+        st+=items[self.name].description
+        world.chat.addchat(st)
     def draw(self):
         xx=self.world.viewport[0]
         yy=self.world.viewport[1]
@@ -124,8 +131,8 @@ class groundItem:
         
         #self.world.screen.blit(self.image, self.rect)
         pygame.draw.rect(self.world.screen, (0,0,255),
-                         (box[0]+1,box[1]+1,
-                          box[2]-1,box[3]-1), 0)
+                         (box[0],box[1],
+                          box[2],box[3]), 0)
         
         self.world.screen.blit(self.world.fontobject.render(str(self.name), 1, (0,0,0)),(box[0],box[1])) 
         if self.quantity>1:
