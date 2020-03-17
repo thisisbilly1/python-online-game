@@ -55,6 +55,10 @@ class player_self(Player):
                 self.world.client.writebit(self.world.combatstatusbars.target.isPlayer)
                 self.world.client.writedouble(self.world.combatstatusbars.target.pid)
                 self.world.client.writebit(self.attackinputs[0])
+                self.world.client.writebit(self.attackinputs[1])
+                self.world.client.writebit(self.attackinputs[2])
+                self.world.client.writebit(self.attackinputs[3])
+                self.world.client.writebit(self.attackinputs[4])
                 self.world.client.sendmessage()
                 #print("a")
                 

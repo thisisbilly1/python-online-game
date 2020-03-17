@@ -137,7 +137,8 @@ class Client(threading.Thread):
                         self.player.target=None
                     break
         
-        self.player.attackinputs=[self.readbit()]
+        self.player.attackinputs=[self.readbit(),self.readbit(),self.readbit(),
+                                  self.readbit(),self.readbit()]
         
 
         #print(self.player.attackinputs)
@@ -271,6 +272,7 @@ class Client(threading.Thread):
             x=result[3]#x
             y=result[4]#y
             #start the player
+            print("starting player")
             self.player=player(self,x,y,invresult[2:],result[5:]).start()
 
             

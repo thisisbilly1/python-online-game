@@ -16,8 +16,8 @@ class player:
         self.inventory=[]
         self.inputs=[0,0,0,0] #left,right,up,down
         
-        self.attackinputs=[0]
-        self.prev_attackinputs=self.attackinputs
+        
+        
         self.target=None
         
         for i in list(inventory):
@@ -33,7 +33,16 @@ class player:
         self.staminamax=stats[4]
         self.stamina=stats[5]
         
+
+        
+        
+        self.num_abilities=5
         self.globalcooldown=0
+        self.attackinputs=[0]*self.num_abilities
+        self.abilitycooldowns=[0]*self.num_abilities
+        self.cooldowns=[2,3,4,5,6]
+        self.ability_damage=[1,2,3,4,5]
+        self.prev_attackinputs=self.attackinputs
     def start(self):
         Thread(target=self.update,args=()).start()
         return self
@@ -47,21 +56,15 @@ class player:
             if not self.target==None:
                 if self.target.hp<=0:
                     self.target=None
+            if not self.target==None:
+                if time.time()-self.globalcooldown>=1.3:
+                    for k in range(self.num_abilities):
+                        if (self.attackinputs[k]):
+                            if time.time()-self.abilitycooldowns[k]>=self.cooldowns[k]:
+                                self.attackinputs[k]=0
+                                self.attack(k,damage=self.ability_damage[k])
+
             
-            if time.time()-self.globalcooldown>=1.3:
-                if (self.attackinputs[0]):
-                    self.attackinputs[0]=0
-                    if not self.target==None:
-                        damage=1
-                        self.target.damagedelays.append([time.time()+(45/self.client.server.FPS),1])
-                        #TODO: add the difference between ranged and melee attacks based on weapons/abilities
-                        self.client.clearbuffer()
-                        self.client.writebyte(send_codes["attack"])
-                        self.client.writedouble(self.target.pid)
-                        self.client.writebyte(self.pid)
-                        self.client.sendmessage_distance()
-                        self.client.sendmessage()
-                        self.globalcooldown=time.time()
 
                     
             #TODO: add simulation of movement on the server for clients
@@ -71,7 +74,19 @@ class player:
             time.sleep(1.0/self.client.server.FPS - ((time.time() - start_time) % (1.0/self.client.server.FPS)))
             
             #time.sleep(1.0/self.FPS - ((time.time() - start_time) % (1.0/self.FPS)))
+    def attack(self,att,damage=1):
+        self.target.damagedelays.append([time.time()+(45/self.client.server.FPS),damage])
+        #TODO: add the difference between ranged and melee attacks based on weapons/abilities
+        self.client.clearbuffer()
+        self.client.writebyte(send_codes["attack"])
+        self.client.writedouble(self.target.pid)
+        self.client.writebyte(self.pid)
+        self.client.writebyte(att)#attack number
+        self.client.sendmessage_distance()
+        self.client.sendmessage()
     
+        self.abilitycooldowns[att]=time.time()
+        self.globalcooldown=time.time()
     
     '''
     def move(self):

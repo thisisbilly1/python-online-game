@@ -159,6 +159,7 @@ class Client:
     def case_message_attack(self):
         targetid=int(self.readdouble())
         pid=int(self.readbyte())
+        attacktype=self.readbyte()
         if not pid==self.pid:
             p=self.world.findPlayer(pid)
         else:
@@ -170,6 +171,7 @@ class Client:
             
             #trigger global cd
             if pid==self.pid:
+                self.world.abilitybar.triggerCD(attacktype)
                 self.world.abilitybar.triggerGCD()
         
     def case_message_npc_create(self):

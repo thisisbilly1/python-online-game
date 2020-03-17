@@ -258,9 +258,10 @@ class world:
         #interfaces
         self.inventory.draw()
         self.chat.draw()
-        self.rightclick.draw()
         self.combatstatusbars.draw()
         self.abilitybar.draw()
+        
+        self.rightclick.draw()
         
         self.screen.blit(self.surface, (0,0))
         pygame.display.update()

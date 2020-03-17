@@ -1,11 +1,18 @@
 import pygame
 import time
 
+def checkmousebox(box,mouse):
+        if (box[0]+box[2]>mouse[0]>box[0] 
+            and box[1]+box[3]>mouse[1]>box[1]):
+            return True
+        return False
+
 class abilitybar:
     def __init__(self,world):
         self.world=world
         self.num_abilities=5
-        self.abilitycds=[0]*self.num_abilities
+        self.abilitycooldowns=[0]*self.num_abilities
+        self.cooldowns=[2,3,4,5,6]
         self.GCD=0
         
         self.x=0
@@ -13,10 +20,18 @@ class abilitybar:
         self.abilitysize=20
         
         self.keybinds=[ord("1"),ord("2"),ord("3"),ord("4"),ord("5")]
+        self.abilitydescriptions=[("Poop", "deal 1 damage"),
+                                  ("Poop2", "deal 2 damage"),
+                                  ("Poop3", "deal 3 damage"),
+                                  ("Poop4", "deal 4 damage"),
+                                  ("Poop5", "deal 5 damage")]
+    def triggerCD(self,x):
+        self.abilitycooldowns[x]=time.time()+self.cooldowns[x]
     def triggerGCD(self):
         self.GCD=time.time()+1.3
         
     def draw(self):
+        mouse=(self.world.mouse_x,self.world.mouse_y)
         for x in range(self.num_abilities):
             xx=self.x+x*self.abilitysize
             yy=self.y
@@ -28,8 +43,12 @@ class abilitybar:
             pygame.draw.rect(self.world.screen, (0,0,0),
                          (box[0],box[1],
                           box[2],box[3]), 1)
-            if self.GCD-time.time()>0:
-                progress=(1-(self.GCD-time.time())/1.3)
+            if self.GCD-time.time()>0 or self.abilitycooldowns[x]-time.time()>0:
+                if self.abilitycooldowns[x]-time.time()>0:
+                    progress=(1-(self.abilitycooldowns[x]-time.time())/self.cooldowns[x])
+                    #print(progress)
+                else:
+                    progress=(1-(self.GCD-time.time())/1.3)
                 points=[]
                 #if progress<1/8:
                 points = [(xx+self.abilitysize/2,yy+self.abilitysize/2),(xx+self.abilitysize/2,yy),
@@ -46,7 +65,23 @@ class abilitybar:
                 
                 pygame.draw.polygon(self.world.surface, (0,0,0,100), points)
             self.world.screen.blit(self.world.fontobject.render(chr(self.keybinds[x]), 1, (0,0,0)),(box[0]+4,box[1]+2)) 
-        
+            
+        #ability description  
+        for x in range(self.num_abilities):
+            xx=self.x+x*self.abilitysize
+            yy=self.y
+            box=[xx,yy,self.abilitysize,self.abilitysize]
+            if checkmousebox(box,mouse):
+                descriptionbox=[mouse[0],mouse[1]-55,150,55]
+                pygame.draw.rect(self.world.screen, (150,150,150),
+                             (descriptionbox[0]+1,descriptionbox[1]+1,
+                              descriptionbox[2]-1,descriptionbox[3]-1), 0)
+                pygame.draw.rect(self.world.screen, (0,0,0),
+                             (descriptionbox[0],descriptionbox[1],
+                              descriptionbox[2],descriptionbox[3]), 1)
+                self.world.screen.blit(self.world.fontobject.render(self.abilitydescriptions[x][0]+":", 1, (0,0,0)),(descriptionbox[0]+5,descriptionbox[1]+5)) 
+                self.world.screen.blit(self.world.fontobject.render(self.abilitydescriptions[x][1], 1, (0,0,0)),(descriptionbox[0]+5,descriptionbox[1]+20)) 
+                self.world.screen.blit(self.world.fontobject.render("cooldown: "+str(self.cooldowns[x])+" seconds", 1, (255,255,255)),(descriptionbox[0]+5,descriptionbox[1]+descriptionbox[3]-15)) 
             
             
 
