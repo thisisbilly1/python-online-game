@@ -6,13 +6,17 @@ from serverclient import Client
 from terrain import terrain
 import time
 
+
+
 sys.path.insert(1, '..//network')
 from NetworkConstants import receive_codes, send_codes
 
-sys.path.insert(1, '/sqlite')
+sys.path.insert(2, '/sqlite')
 import sqlite3
 
-from npc import npc
+sys.path.insert(3, './npcs')
+from cow import cow
+
 
 class Server:
     def __init__(self, max_clients, ip, port):
@@ -20,7 +24,7 @@ class Server:
         self.max_clients = max_clients
         self.clients = []#players
         self.items = []#items on the ground
-        self.npcs = [npc(self,"npc",0,300,100).start()]
+        self.npcs = [cow(self, 0,300,100).start()]
         self.terrain=terrain(self)
         self.sendsize=(300,300)#sending box size for player updating things
         
@@ -38,6 +42,14 @@ class Server:
     def __del__(self):
         self.db.commit()
         self.db.close()
+        
+    def findPlayer(self,pid):
+        for p in self.clients:
+            if p.pid==pid:
+                return pid
+        print("unable to find player with pid" +str(pid))
+        return None
+    
     def sql(self,sql,args=()):
         try:
             if sql=="COMMIT":
@@ -90,8 +102,9 @@ class Server:
         try:
             self.socket.bind((self.ip,self.port))
             self.running = True
-        except self.socket.error as err:
-            print("Failed to bind socket")
+        except Exception as e:
+            print(e)
+            print("failed to bind socket")
             sys.exit()
             
         #main loop

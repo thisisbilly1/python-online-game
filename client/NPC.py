@@ -19,7 +19,7 @@ class NPC(Player):
         
         self.hpmax=hpmax
         self.hp=hpmax
-        self.isPlayer=False
+        self.isPlayer=0
     def start(self):
         Thread(target=self.update,args=()).start()
         return self
@@ -37,5 +37,6 @@ class NPC(Player):
                             #print("al;sdjfl")
                      
                 time.sleep(1.0/self.world.FPS - ((time.time() - start_time) % (1.0/self.world.FPS)))
-            except:
+            except Exception as e:
+                print(e)
                 pass

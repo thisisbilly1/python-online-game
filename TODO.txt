@@ -1,7 +1,15 @@
+probabilities for drops in npcs
+
+
+fix ping spamming the fuck out of the server
+
+
+area update for npcs movement and status
+
+
+	
 attacks
-	-ranged attack on server/clients
 	-melee
-ability bar
 	-auto attacks?
 
 do we need to simulate movement on server now? idk lol
@@ -14,13 +22,13 @@ define my MMO goals
 	-combat
 		-classes
 		-Power points
-		-abilities
 		-auto attacks
 	-equiptment
 
 	-quests
 	
 -area udpates for player (chat? need clan chats then)...
+
 inventory
 	-sprites for items
 	-noted items

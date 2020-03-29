@@ -21,8 +21,12 @@ from wall import wall
 
 class world:
     def __init__(self):
-        self.displaysize=(300,300)#(980,620)
+        self.displaysize=(300,300)#(920,680)
         self.worldsize=(0,0)
+        #view port
+        self.viewport=[0,0]#[int(self.player.x+self.displaysize[0]/2),int(self.player.y+self.displaysize[1]/2)]
+        self.viewboxdim=[50,50] #w, h
+        self.FPS=200#600#60
         #objects
         self.walls=[]
         self.npcs=[]
@@ -103,10 +107,11 @@ class world:
         pygame.init()
         pygame.font.init()
         self.fontobject = pygame.font.Font(None,18)
-        self.screen = pygame.display.set_mode(self.displaysize)
-        self.surface = pygame.Surface(self.displaysize, pygame.SRCALPHA)
+        self.screen = pygame.display.set_mode(self.displaysize, pygame.HWSURFACE)
+        #self.surface = pygame.Surface(self.displaysize, pygame.HWSURFACE | pygame.SRCALPHA)
+        self.surface = pygame.Surface((150,150), pygame.HWSURFACE | pygame.SRCALPHA)
         self.clock=pygame.time.Clock()
-        self.FPS=200#60
+
         self.running=True
         
 
@@ -115,9 +120,7 @@ class world:
         self.player=player_self(self, name, self.client.pid, 100, 10).start()
         self.client.updatePlayerStart()
         
-        #view port
-        self.viewport=[0,0]#[int(self.player.x+self.displaysize[0]/2),int(self.player.y+self.displaysize[1]/2)]
-        self.viewboxdim=[50,50] #w, h
+
 
     def start(self):
         if self.loggedin==True:
@@ -225,13 +228,12 @@ class world:
         
         self.player.draw()
         
-        
-                 
         for c in self.npcs:
              if (self.player.x-self.displaysize[0]<c.x<self.player.x+self.displaysize[0]
                 and self.player.y-self.displaysize[1]<c.y<self.player.y+self.displaysize[1]):
                  if c.hp>0:
                      c.draw()
+                
 
         for c in self.otherplayers:
              if (self.player.x-self.displaysize[0]<c.x<self.player.x+self.displaysize[0]
@@ -244,13 +246,13 @@ class world:
                 and self.player.y-self.displaysize[1]<i.y<self.player.y+self.displaysize[1]):
                     i.draw()
                    
-
+        
         for x in range(max(int(-self.viewport[0]/16),0),min(len(self.walls),int((self.displaysize[0]-self.viewport[0]+16)/16))):
             #for y in range(len(x)):
             for y in range(max(int(-self.viewport[1]/16),0),min(len(self.walls[x]),int((self.displaysize[1]-self.viewport[1]+16)/16))):
                 if not self.walls[x][y]==None:
                     self.walls[x][y].draw()
-                    
+        
         for c in self.attacks:
              if (self.player.x-self.displaysize[0]<c.x<self.player.x+self.displaysize[0]
                 and self.player.y-self.displaysize[1]<c.y<self.player.y+self.displaysize[1]):
@@ -263,9 +265,14 @@ class world:
         
         self.rightclick.draw()
         
-        self.screen.blit(self.surface, (0,0))
-        pygame.display.update()
+        self.screen.blit(self.fontobject.render(str(int(self.clock.get_fps())), 1, (0,0,0)),(self.displaysize[0]-25,5)) 
+
         
+        self.screen.blit(self.surface, (0,0))
+        
+        
+        
+        pygame.display.update()
         self.clock.tick(self.FPS)
         
     def stop(self):

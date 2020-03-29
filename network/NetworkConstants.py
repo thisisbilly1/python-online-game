@@ -12,7 +12,8 @@ receive_codes = {
     "terrain": 10,
     "npc_move":11,
     "npc_create":12,
-    "attack":13
+    "attack":13,
+    "update_stats":14
     }
 send_codes = {
     "ping": 0,
@@ -28,7 +29,8 @@ send_codes = {
     "terrain": 10,
     "npc_move":11,
     "npc_create":12,
-    "attack":13
+    "attack":13,
+    "update_stats":14
     }
 
 login_status={

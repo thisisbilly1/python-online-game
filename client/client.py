@@ -156,16 +156,56 @@ class Client:
             self.case_message_npc_create()
         if event_id == receive_codes["attack"]:#attack bullet create
             self.case_message_attack()
+        if event_id == receive_codes["update_stats"]:#update stats
+            self.case_message_update_stats()
+            
+    def case_message_update_stats(self):
+        isPlayer=self.readbit()
+        pid=int(self.readdouble())
+        p=None
+        if isPlayer:
+            if not pid==self.pid:
+                p=self.world.findPlayer(pid)
+                p.hp=self.readdouble()
+                p.mana=self.readdouble()
+                p.stamina=self.readdouble()
+                if p.hp<=0:
+                   if self.world.combatstatusbars.target==p:
+                       self.world.combatstatusbars.target=None
+            else:
+                self.world.combatstatusbars.hp=self.readdouble()
+                self.world.combatstatusbars.mana=self.readdouble()
+                self.world.combatstatusbars.stamina=self.readdouble()
+        else:
+            p=self.world.findNPC(pid)
+            p.hp=self.readdouble()
+            #untarget if dead
+            if p.hp<=0:
+                if self.world.combatstatusbars.target==p:
+                    self.world.combatstatusbars.target=None
+        
+            
+
+                    
     def case_message_attack(self):
+        isPlayer=self.readbit()
         targetid=int(self.readdouble())
-        pid=int(self.readbyte())
+        pid=int(self.readdouble())
         attacktype=self.readbyte()
+        #print(isPlayer,targetid, pid,attacktype)
         if not pid==self.pid:
             p=self.world.findPlayer(pid)
         else:
             p=self.world.player
-        t=self.world.findNPC(targetid)
-        if not t==None:
+        
+        if isPlayer:
+            if not targetid==self.pid:
+                t=self.world.findPlayer(targetid)
+            else:
+                t=self.world.player
+        else:
+            t=self.world.findNPC(targetid)
+        if not (t==None and p==None):
             a=rangedAttack(self.world,t,p.x+p.w/2,p.y+p.h/2).start()
             self.world.attacks.append(a)
             
@@ -173,7 +213,7 @@ class Client:
             if pid==self.pid:
                 self.world.abilitybar.triggerCD(attacktype)
                 self.world.abilitybar.triggerGCD()
-        
+
     def case_message_npc_create(self):
         pid=int(self.readdouble())
         name=self.readstring()
@@ -192,11 +232,6 @@ class Client:
             if n.pid==pid:
                 n.x=self.readdouble()
                 n.y=self.readdouble()
-                n.hp=self.readdouble()
-                #untarget if dead
-                if n.hp<=0:
-                    if self.world.combatstatusbars.target==n:
-                        self.world.combatstatusbars.target=None
                 break
             
     def case_message_terrain(self):
@@ -252,6 +287,7 @@ class Client:
             c.inputs=[self.readbit(),self.readbit(),self.readbit(),self.readbit()]
             c.x=self.readdouble()
             c.y=self.readdouble()
+            
 
     def case_message_register(self):
         self.loginmessage=self.readstring()
@@ -301,8 +337,11 @@ class Client:
         pid = self.readbyte()
         x = self.readdouble()
         y = self.readdouble()
+        hpmax = self.readdouble()
+        manamax = self.readdouble()
+        staminamax = self.readdouble()
         #print(str((x,y)))
-        p=player_other(self.world, name, pid, x, y).start()
+        p=player_other(self.world, name, pid, x, y, hpmax, manamax, staminamax).start()
         self.world.otherplayers.append(p)
         print(name + " joined")
     def case_message_ping(self):

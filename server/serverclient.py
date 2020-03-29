@@ -6,6 +6,9 @@ import threading
 from player import player
 from item import Serveritem
 
+import inspect
+import time
+
 sys.path.insert(1, '..//network')
 import Network
 from NetworkConstants import receive_codes, send_codes, inventory_codes
@@ -27,17 +30,26 @@ class Client(threading.Thread):
         self.name = None
         
         self.ping=0
+        self.pingtime=time.time()
     def getpid(self):
         return self.pid
     def sendmessage_distance(self):
+        #curframe = inspect.currentframe()
+        #calframe = inspect.getouterframes(curframe, 2)
+        #print('caller name:', calframe[1][3])
+        
         for c in self.server.clients:
             if not c == self:
                 if not c.player==None:
-                    if (self.player.x-self.server.sendsize[0]<c.player.x<self.player.x+self.server.sendsize[0]
-                        and self.player.y-self.server.sendsize[1]<c.player.y<self.player.y+self.server.sendsize[1]):
-                        c.sendmessage(self.buffer)
+                    #if (self.player.x-self.server.sendsize[0]<c.player.x<self.player.x+self.server.sendsize[0]
+                        #and self.player.y-self.server.sendsize[1]<c.player.y<self.player.y+self.server.sendsize[1]):
+                    c.sendmessage(self.buffer)
                     
     def sendmessage(self, buff=None, debuf=False):
+        #curframe = inspect.currentframe()
+        #calframe = inspect.getouterframes(curframe, 2)
+        #print('caller name:', calframe[1][3])
+        
         if buff == None:
             buff=self.buffer
         types = ''.join(buff.BufferWriteT)
@@ -67,9 +79,10 @@ class Client(threading.Thread):
         
         while self.connected:
             if self.ping>1000:
-                self.running=False
+                self.connected=False
                 self.disconnect_user()
                 return
+                
             try:
                 self.buffer.Buffer = self.connection.recv(1024)
                 #self.buffer.Buffer0 = self.buffer.Buffer
@@ -90,7 +103,7 @@ class Client(threading.Thread):
                         self.readbyte()
                         
             except Exception as e:#ConnectionResetError:
-                #print(e)
+                #print(self.name+" -- "+str(e))
                 #self.connected=False
                 #self.disconnect_user()
                 self.ping+=1
@@ -121,19 +134,22 @@ class Client(threading.Thread):
             self.case_message_attack()
     
     def case_message_attack(self):
-        isPlayer=self.readbit()
         pid=int(self.readdouble())
+        isPlayer=self.readbit()
         if isPlayer:
             for c in self.server.clients:
                 if c.pid==pid:
-                    self.player.target=c
+                    if c.player.hp>0:
+                        self.player.target=c.player
+                    else:#unselect if hp<0
+                        self.player.target=None
                     break
         else:
             for c in self.server.npcs:
                 if c.pid==pid:
                     if c.hp>0:
                         self.player.target=c
-                    else:
+                    else:#unselect if hp<0
                         self.player.target=None
                     break
         
@@ -236,6 +252,7 @@ class Client(threading.Thread):
         self.writestring(st)
         self.writebit(success)
         self.sendmessage()
+        
     def case_message_login(self):
         username=self.readstring()
         password=self.readstring()
@@ -272,7 +289,7 @@ class Client(threading.Thread):
             x=result[3]#x
             y=result[4]#y
             #start the player
-            print("starting player")
+            #print("starting player")
             self.player=player(self,x,y,invresult[2:],result[5:]).start()
 
             
@@ -304,6 +321,9 @@ class Client(threading.Thread):
             self.writebyte(self.pid)
             self.writedouble(self.player.x)
             self.writedouble(self.player.y)
+            self.writedouble(self.player.hpmax)
+            self.writedouble(self.player.manamax)
+            self.writedouble(self.player.staminamax)
             self.sendmessage_all(False)
             
             #get the other players
@@ -315,6 +335,9 @@ class Client(threading.Thread):
                     self.writebyte(players.getpid())
                     self.writedouble(players.player.x)
                     self.writedouble(players.player.y)
+                    self.writedouble(players.player.hpmax)
+                    self.writedouble(players.player.manamax)
+                    self.writedouble(players.player.staminamax)
                     self.sendmessage()
             #get all the npcs
             for i in self.server.npcs:
@@ -330,6 +353,7 @@ class Client(threading.Thread):
 		
         self.player.x=self.readdouble()
         self.player.y=self.readdouble()
+        
 
         self.clearbuffer()
         self.writebyte(send_codes["move"])
@@ -354,9 +378,11 @@ class Client(threading.Thread):
         self.sendmessage_all()
     
     def case_message_ping(self):
-        self.clearbuffer()
-        self.writebyte(send_codes["ping"])
-        self.sendmessage()
+        if time.time()-self.pingtime>5:
+            self.clearbuffer()
+            self.writebyte(send_codes["ping"])
+            self.sendmessage()
+            self.pingtime=time.time()
     def case_message_disconnect(self):
         self.disconnect_user()
         
@@ -367,7 +393,7 @@ class Client(threading.Thread):
     def disconnect_user(self):
         #print("Disconnected from ", self.address)
         print(self.name+ " disconnected")
-        
+        self.connected = False 
         #save into db
         if not self.player==None:
             self.server.sql("UPDATE Players SET x=?, y=? WHERE username=?", 
@@ -402,8 +428,8 @@ class Client(threading.Thread):
             self.sendmessage_all(False)
 
             self.player.running=False
-            
-        self.connected = False  
+
+        
         if self in self.server.clients:
             self.server.clients.remove(self)
         

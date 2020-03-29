@@ -1,10 +1,12 @@
 import time
+import random
 from threading import Thread
 import sys
-sys.path.insert(1, '..//network')
+from item import Serveritem
+sys.path.insert(1, '....//network')
 from NetworkConstants import send_codes
 class npc:
-    def __init__(self,server, name, pid, x, y):
+    def __init__(self,server, pid, x, y):
         self.pid=pid
         self.x=x
         self.y=y
@@ -12,7 +14,7 @@ class npc:
         self.server=server
         
         self.name="npc"
-        self.hpmax=1000
+        self.hpmax=25
         self.hp=self.hpmax
     
         self.hp_previous=self.hp
@@ -22,10 +24,33 @@ class npc:
         self.running=True
         
         self.respawntimer=0
-        self.damagedelays=[]
+        self.respawntime=15
+        self.damagedelays=[]#[time,damage,pid]
+        self.playerdamages=[]#[name,damage]
+        
+        self.isPlayer=False
+        
+        self.droptable=[]
+        
     def start(self):
         Thread(target=self.update,args=()).start()
         return self
+    def death(self):
+        player=None
+        m=0
+        for d in self.playerdamages:
+            if d[1]>m:
+                m=d[1]
+                player=d[0]
+
+        #[name, probability, min stack, max stack]
+        for i in self.droptable:
+            if i[1]>=random.random():
+                if i[2]==i[3]:
+                    itm=[i[0],i[2]]
+                else:
+                    itm=[i[0],random.randrange(i[2],i[3])]
+                self.server.items.append(Serveritem(self.server,len(self.server.items)+1,itm,self.x,self.y,pid=player))
     def update(self):
         start_time=time.time()
         while self.running:
@@ -34,18 +59,27 @@ class npc:
                     if d[0]-time.time()<=0:
                         self.hp-=d[1]
                         self.damagedelays.remove(d)
+                        #track damage for player drops
+                        newPlayer=True
+                        for damages in self.playerdamages:
+                            if damages[0]==d[2]:
+                                damages[1]+=d[1]
+                                newPlayer=False
+                        if newPlayer:
+                            self.playerdamages.append([d[2],d[1]]) #[name,damage]
+                            
                 if self.hp<=0:
                     if self.respawntimer==0:
                         self.respawntimer=time.time()
+                        self.death()
                     else:
-                        if time.time()-self.respawntimer>=10:
+                        if time.time()-self.respawntimer>=self.respawntime:
                             self.hp=self.hpmax
                             self.respawntimer=0
                     
                 #self.move() 
                 if (not self.x==self.x_previous or
-                not self.y==self.y_previous or
-                not self.hp==self.hp_previous):
+                not self.y==self.y_previous):
                     for c in self.server.clients:
                         if not c.player==None:
                             c.clearbuffer()
@@ -53,8 +87,19 @@ class npc:
                             c.writedouble(self.pid)
                             c.writedouble(self.x)
                             c.writedouble(self.y)
+                            c.sendmessage()
+                
+                #update status
+                if (not self.hp==self.hp_previous):
+                    for c in self.server.clients:
+                        if not c.player==None:
+                            c.clearbuffer()
+                            c.writebyte(send_codes["update_stats"])
+                            c.writebit(self.isPlayer)
+                            c.writedouble(self.pid)
                             c.writedouble(self.hp)
                             c.sendmessage()
+                            
                 self.hp_previous=self.hp
                 self.x_previous=self.x
                 self.y_previous=self.y

@@ -33,7 +33,9 @@ class player:
         self.staminamax=stats[4]
         self.stamina=stats[5]
         
-
+        self.hp_previous=self.hp
+        self.mana_previous=self.mana
+        self.stamina_previous=self.stamina
         
         
         self.num_abilities=5
@@ -43,6 +45,8 @@ class player:
         self.cooldowns=[2,3,4,5,6]
         self.ability_damage=[1,2,3,4,5]
         self.prev_attackinputs=self.attackinputs
+        self.damagedelays=[]
+        self.isPlayer=True
     def start(self):
         Thread(target=self.update,args=()).start()
         return self
@@ -51,6 +55,16 @@ class player:
         while self.running:
             #attacking
             self.prev_attackinputs=self.attackinputs
+            
+            self.hp_previous=self.hp
+            self.mana_previous=self.mana
+            self.stamina_previous=self.stamina
+            
+            for d in self.damagedelays:
+                if d[0]-time.time()<=0:
+                    self.hp-=d[1]
+                    self.damagedelays.remove(d)
+            
             
             #lose target if target hp <0
             if not self.target==None:
@@ -69,21 +83,34 @@ class player:
                     
             #TODO: add simulation of movement on the server for clients
             #self.move()
-
             
+            #check if your stats changed at all, update
+            if (not self.hp==self.hp_previous or not self.mana==self.mana_previous or not self.stamina==self.stamina_previous):
+                self.client.clearbuffer()
+                self.client.writebyte(send_codes["update_stats"])
+                self.client.writebit(self.isPlayer)
+                self.client.writedouble(self.pid)
+                self.client.writedouble(self.hp)
+                self.client.writedouble(self.mana)
+                self.client.writedouble(self.stamina)
+                #self.sendmessage_distance()
+                self.client.sendmessage_all()
             time.sleep(1.0/self.client.server.FPS - ((time.time() - start_time) % (1.0/self.client.server.FPS)))
             
             #time.sleep(1.0/self.FPS - ((time.time() - start_time) % (1.0/self.FPS)))
     def attack(self,att,damage=1):
-        self.target.damagedelays.append([time.time()+(45/self.client.server.FPS),damage])
+        self.target.damagedelays.append([time.time()+(45/self.client.server.FPS),damage,self.pid])
+        
         #TODO: add the difference between ranged and melee attacks based on weapons/abilities
         self.client.clearbuffer()
         self.client.writebyte(send_codes["attack"])
+        self.client.writebit(self.target.isPlayer)
         self.client.writedouble(self.target.pid)
-        self.client.writebyte(self.pid)
+        self.client.writedouble(self.pid)
         self.client.writebyte(att)#attack number
-        self.client.sendmessage_distance()
-        self.client.sendmessage()
+        #self.client.sendmessage_distance()
+        #self.client.sendmessage()
+        self.client.sendmessage_all()
     
         self.abilitycooldowns[att]=time.time()
         self.globalcooldown=time.time()

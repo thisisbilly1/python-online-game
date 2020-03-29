@@ -37,6 +37,7 @@ class Player(Obj):
         return self.pid
     
     def move(self):
+ 
         xdir=(self.inputs[1]-self.inputs[0])*.1
         #ydir=(self.inputs[3]-self.inputs[2])*.1
 
@@ -57,7 +58,6 @@ class Player(Obj):
         #print(self.x,self.y)
 
     def draw(self):
-       
         xx=self.world.viewport[0]
         yy=self.world.viewport[1]
         box=[self.x+xx,self.y+yy,self.w,self.h]
@@ -74,8 +74,8 @@ class Player(Obj):
         
         self.x_previous=self.x
         self.y_previous=self.y
+    
 
-        
 
         
     def stop(self):

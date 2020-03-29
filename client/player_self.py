@@ -16,16 +16,17 @@ class player_self(Player):
         self.prev_attackinputs=self.attackinputs
         
         #update to the server every once in a while 
-        self.min_update_max=30
+        self.min_update_max=200
         self.min_update_time=self.min_update_max
         
-        self.isPlayer=True
+        self.isPlayer=1
     def start(self):
         Thread(target=self.update,args=()).start()
         return self
     def update(self):
         start_time=time.time()
         while self.running:
+            
             self.prev_inputs=self.inputs
             self.prev_attackinputs=self.attackinputs
             self.inputs=[0,0,0,0]
@@ -48,18 +49,19 @@ class player_self(Player):
                                 self.attackinputs[k]=1 
                         
             #send attack inputs packet
-            if (not self.attackinputs==self.prev_attackinputs):
-                #if self.attackinputs[0]:
-                self.world.client.clearbuffer()
-                self.world.client.writebyte(send_codes["attack"])
-                self.world.client.writebit(self.world.combatstatusbars.target.isPlayer)
-                self.world.client.writedouble(self.world.combatstatusbars.target.pid)
-                self.world.client.writebit(self.attackinputs[0])
-                self.world.client.writebit(self.attackinputs[1])
-                self.world.client.writebit(self.attackinputs[2])
-                self.world.client.writebit(self.attackinputs[3])
-                self.world.client.writebit(self.attackinputs[4])
-                self.world.client.sendmessage()
+            if not self.world.combatstatusbars.target==None:
+                if (not self.attackinputs==self.prev_attackinputs):
+                    #if self.attackinputs[0]:
+                    self.world.client.clearbuffer()
+                    self.world.client.writebyte(send_codes["attack"])
+                    self.world.client.writedouble(self.world.combatstatusbars.target.pid)
+                    self.world.client.writebit(self.world.combatstatusbars.target.isPlayer)
+                    self.world.client.writebit(self.attackinputs[0])
+                    self.world.client.writebit(self.attackinputs[1])
+                    self.world.client.writebit(self.attackinputs[2])
+                    self.world.client.writebit(self.attackinputs[3])
+                    self.world.client.writebit(self.attackinputs[4])
+                    self.world.client.sendmessage()
                 #print("a")
                 
             #send move input packet
