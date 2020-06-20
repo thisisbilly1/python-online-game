@@ -21,7 +21,7 @@ from wall import wall
 
 class world:
     def __init__(self):
-        self.displaysize=(300,300)#(920,680)
+        self.displaysize=(300,300)#(920,680)#
         self.worldsize=(0,0)
         #view port
         self.viewport=[0,0]#[int(self.player.x+self.displaysize[0]/2),int(self.player.y+self.displaysize[1]/2)]

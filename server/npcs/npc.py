@@ -32,6 +32,9 @@ class npc:
         
         self.droptable=[]
         
+        self.target=None
+        self.globalcooldown=time.time()
+        
     def start(self):
         Thread(target=self.update,args=()).start()
         return self
@@ -51,10 +54,29 @@ class npc:
                 else:
                     itm=[i[0],random.randrange(i[2],i[3])]
                 self.server.items.append(Serveritem(self.server,len(self.server.items)+1,itm,self.x,self.y,pid=player))
+                
+    def attack(self):
+        damage=1
+        target=self.server.findPlayer(self.target)#self.target
+        target.damagedelays.append([time.time()+(45/self.client.server.FPS),damage,self.pid])
+        #TODO: add the difference between ranged and melee attacks based on weapons/abilities
+        self.client.clearbuffer()
+        self.client.writebyte(send_codes["attack"])
+        self.client.writebit(target.isPlayer)
+        self.client.writedouble(self.target)
+        self.client.writedouble(self.pid)
+        self.client.writebyte(0)#attack number
+        #self.client.sendmessage_distance()
+        #self.client.sendmessage()
+        self.client.sendmessage_all()
+    
+
+        
     def update(self):
         start_time=time.time()
         while self.running:
             try:
+                #damaging the npc
                 for d in self.damagedelays:
                     if d[0]-time.time()<=0:
                         self.hp-=d[1]
@@ -67,17 +89,26 @@ class npc:
                                 newPlayer=False
                         if newPlayer:
                             self.playerdamages.append([d[2],d[1]]) #[name,damage]
+                            #attack back, add a target
+                            self.target=d[2]
                             
+                #death and respawn
                 if self.hp<=0:
                     if self.respawntimer==0:
                         self.respawntimer=time.time()
                         self.death()
+                        self.target=None
                     else:
                         if time.time()-self.respawntimer>=self.respawntime:
                             self.hp=self.hpmax
                             self.respawntimer=0
-                    
-                #self.move() 
+                #attacking
+                if not self.target==None:
+                    if time.time()-self.globalcooldown>=1.3:
+                        print(self.target)
+                        self.attack()
+                        
+                #updating
                 if (not self.x==self.x_previous or
                 not self.y==self.y_previous):
                     for c in self.server.clients:

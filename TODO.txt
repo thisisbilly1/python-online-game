@@ -1,9 +1,15 @@
-probabilities for drops in npcs
+npcs attack back if attacked. first person to attack them is their target
+	-fix target in npc----
 
 
+add skills
+	-attack - more damage per hit
+	-defense - more defense / hp /damage reduction
+	-range - faster attack / (movement)
+	-magicka - more mana
+	
+	-skills for NPCS
 fix ping spamming the fuck out of the server
-
-
 area update for npcs movement and status
 
 
